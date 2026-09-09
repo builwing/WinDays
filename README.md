@@ -5,4 +5,12 @@
 - WinTask の集客用フロントアプリ。**アカウントは WinTask と共通**（登録＝WinTask Free アカウント）
 - フロントエンド: React + Vite + TypeScript + Tailwind（PWA）— 本リポジトリ
 - バックエンド: WinTask の Laravel API（`/api/v1`）に相乗り — WinTask リポジトリ側で開発
-- **要件定義書**: [`docs/要件定義書.md`](docs/要件定義書.md)
+- **要件定義書**: [`docs/要件定義書.md`](docs/要件定義書.md)　/　**再開ガイド**: [`docs/開発ステータス.md`](docs/開発ステータス.md)
+
+## 開発
+
+```bash
+cd web && npm install && npm run dev   # http://localhost:5174（API はローカルの WinTask: php artisan serve）
+```
+
+本番反映は `bash deploy/web-reflect.sh`（ビルド → `web/build`）。初回公開は `sudo bash deploy/days-domain.sh`。

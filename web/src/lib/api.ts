@@ -1,0 +1,46 @@
+import axios from 'axios'
+
+/** API のオリジン（例: https://api.days.winroad.org）。`/api/v1` はここに付ける。 */
+export const API_ORIGIN = (import.meta.env.VITE_API_ORIGIN ?? '').replace(/\/$/, '')
+export const API_BASE = `${API_ORIGIN}/api/v1`
+
+const TOKEN_KEY = 'windays.token'
+
+export function getToken(): string | null {
+  try {
+    return localStorage.getItem(TOKEN_KEY)
+  } catch {
+    return null
+  }
+}
+
+export function setToken(token: string | null): void {
+  try {
+    if (token) localStorage.setItem(TOKEN_KEY, token)
+    else localStorage.removeItem(TOKEN_KEY)
+  } catch {
+    /* private mode など */
+  }
+}
+
+/** WinTask と共通の `/api/v1` を Bearer トークンで呼ぶクライアント。 */
+export const api = axios.create({
+  baseURL: API_BASE,
+  headers: { Accept: 'application/json' },
+})
+
+api.interceptors.request.use((config) => {
+  const token = getToken()
+  if (token) config.headers.Authorization = `Bearer ${token}`
+  return config
+})
+
+/** Laravel のヘルスチェック（`/up`）。API 疎通確認用。 */
+export async function checkApiHealth(): Promise<boolean> {
+  try {
+    const res = await axios.get(`${API_ORIGIN}/up`, { timeout: 5000 })
+    return res.status === 200
+  } catch {
+    return false
+  }
+}
