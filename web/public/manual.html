@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="description" content="WinDays スマホ版の使い方。登録からワンタップ記録、帯入力、ふりかえり、ホーム画面への追加まで。">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<title>WinDays スマホ版マニュアル</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@500;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+  :root {
+    --ground: #f6f9f8;
+    --surface: #ffffff;
+    --ink: #16302c;
+    --muted: #5b6f6b;
+    --line: #d9e3e0;
+    --soft: #e9f1ef;
+    --work: #0d9488;
+    --life: #d97706;
+    --rest: #6366f1;
+    --work-soft: #d6efeb;
+    --life-soft: #fbe9cf;
+    --rest-soft: #e1e2fb;
+    --alert: #b42318;
+    --alert-soft: #fde8e6;
+    --focus: #0d9488;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #101c1a;
+      --surface: #182927;
+      --ink: #e6efec;
+      --muted: #9db2ad;
+      --line: #27403b;
+      --soft: #1f3330;
+      --work: #2dd4bf;
+      --life: #fbbf24;
+      --rest: #a5b4fc;
+      --work-soft: #123f3a;
+      --life-soft: #45300c;
+      --rest-soft: #2b2d62;
+      --alert: #fda29b;
+      --alert-soft: #3d1a17;
+      --focus: #2dd4bf;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #101c1a;
+    --surface: #182927;
+    --ink: #e6efec;
+    --muted: #9db2ad;
+    --line: #27403b;
+    --soft: #1f3330;
+    --work: #2dd4bf;
+    --life: #fbbf24;
+    --rest: #a5b4fc;
+    --work-soft: #123f3a;
+    --life-soft: #45300c;
+    --rest-soft: #2b2d62;
+    --alert: #fda29b;
+    --alert-soft: #3d1a17;
+    --focus: #2dd4bf;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: "Noto Sans JP", "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
+    font-size: 16px;
+    line-height: 1.85;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3 {
+    font-family: "Zen Kaku Gothic New", "Noto Sans JP", "Hiragino Sans", sans-serif;
+    text-wrap: balance;
+    line-height: 1.3;
+    margin: 0;
+  }
+  a { color: var(--work); }
+  :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+  .wrap { max-width: 640px; margin: 0 auto; padding: 0 20px 80px; }
+
+  /* ---- 見出し ---- */
+  header.hero { padding: 40px 0 20px; }
+  .mark { display: inline-flex; align-items: flex-end; gap: 3px; margin-bottom: 14px; }
+  .mark span { display: block; width: 8px; border-radius: 2px; }
+  .mark .w { height: 28px; background: var(--work); }
+  .mark .l { height: 18px; background: var(--life); }
+  .mark .r { height: 10px; background: var(--rest); }
+  .eyebrow { font-size: 12px; letter-spacing: 0.12em; color: var(--muted); font-weight: 500; }
+  h1 { font-size: 30px; font-weight: 900; margin-top: 4px; }
+  .lede { margin: 12px 0 0; color: var(--muted); max-width: 34em; }
+  .meta { margin-top: 14px; font-size: 13px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 6px 16px; }
+  .meta code { font-family: inherit; background: var(--soft); padding: 2px 8px; border-radius: 6px; color: var(--ink); }
+
+  /* ---- 目次（スクロールチップ） ---- */
+  nav.toc {
+    position: sticky; top: 0; z-index: 5;
+    margin: 12px -20px 0; padding: 10px 20px;
+    background: color-mix(in srgb, var(--ground) 92%, transparent);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--line);
+  }
+  nav.toc ol { list-style: none; margin: 0; padding: 0; display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; }
+  nav.toc ol::-webkit-scrollbar { display: none; }
+  nav.toc a {
+    display: block; white-space: nowrap; text-decoration: none;
+    font-size: 13px; font-weight: 500; color: var(--ink);
+    background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px;
+  }
+
+  /* ---- 章 ---- */
+  section { padding-top: 36px; }
+  section h2 { font-size: 22px; font-weight: 700; display: flex; align-items: baseline; gap: 10px; }
+  section h2 .no { font-size: 13px; font-weight: 500; color: var(--muted); letter-spacing: 0.08em; }
+  section > p { margin: 10px 0 0; max-width: 36em; }
+  h3 { font-size: 16px; font-weight: 700; margin-top: 22px; }
+
+  ol.steps { margin: 12px 0 0; padding: 0; list-style: none; counter-reset: step; display: grid; gap: 10px; }
+  ol.steps li { counter-increment: step; display: grid; grid-template-columns: 28px 1fr; gap: 12px; align-items: start; }
+  ol.steps li::before {
+    content: counter(step);
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--ink); color: var(--ground);
+    font-family: "Zen Kaku Gothic New", sans-serif; font-weight: 700; font-size: 14px;
+    display: grid; place-items: center; margin-top: 3px;
+  }
+  ul.plain { margin: 10px 0 0; padding-left: 1.2em; }
+  ul.plain li + li { margin-top: 4px; }
+
+  .note {
+    margin-top: 16px; padding: 12px 14px; border-radius: 10px;
+    background: var(--soft); border-left: 4px solid var(--work); font-size: 14px;
+  }
+  .note.warn { background: var(--alert-soft); border-left-color: var(--alert); }
+  .note strong { font-weight: 700; }
+
+  kbd.ui {
+    font-family: inherit; font-size: 0.92em; font-weight: 500;
+    background: var(--surface); border: 1px solid var(--line); border-bottom-width: 2px;
+    border-radius: 6px; padding: 0 7px; white-space: nowrap;
+  }
+
+  /* ---- スマホの画面イメージ ---- */
+  figure.phone { margin: 16px 0 0; }
+  .screen {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 18px;
+    padding: 14px; box-shadow: 0 1px 0 var(--line);
+  }
+  .screen .bar { display: flex; gap: 8px; flex-wrap: wrap; }
+  .chip { font-size: 13px; font-weight: 500; border: 1.5px solid; border-radius: 999px; padding: 3px 12px; }
+  .chip.work { color: var(--work); border-color: var(--work); }
+  .chip.life { color: var(--life); border-color: var(--life); }
+  .chip.rest { color: var(--rest); border-color: var(--rest); }
+  .chip.on.work { background: var(--work); color: #fff; }
+  .running {
+    display: flex; justify-content: space-between; align-items: center;
+    background: var(--work); color: #fff; border-radius: 10px; padding: 8px 12px; margin-bottom: 10px;
+  }
+  .running small { display: block; opacity: 0.9; font-size: 11px; line-height: 1.2; }
+  .running b { font-size: 16px; }
+  .running .stop { background: rgba(255,255,255,0.22); border-radius: 6px; padding: 4px 10px; font-size: 13px; }
+  .tl { position: relative; margin-top: 12px; height: 176px; border-left: 1px solid var(--line); margin-left: 44px; }
+  .tl .h { position: absolute; left: -44px; right: 0; border-top: 1px solid var(--line); font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .tl .h span { position: absolute; top: -9px; left: 0; width: 38px; text-align: right; }
+  .tl .band { position: absolute; left: 6px; right: 6px; border-radius: 6px; color: #fff; font-size: 12px; padding: 2px 8px; overflow: hidden; white-space: nowrap; }
+  .tl .band.dash { border: 2px dashed var(--work); color: var(--work); background: var(--work-soft); }
+  .tl .now { position: absolute; left: -44px; right: 0; border-top: 2px solid var(--alert); }
+  figcaption { font-size: 13px; color: var(--muted); margin-top: 8px; }
+
+  /* ---- ドーナツ ---- */
+  .legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 13px; margin-top: 8px; }
+  .legend span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; background: var(--c); }
+
+  table { border-collapse: collapse; width: 100%; margin-top: 12px; font-size: 14px; }
+  th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-weight: 700; color: var(--muted); font-size: 13px; }
+  td.n { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .tablewrap { overflow-x: auto; }
+
+  .tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 12px; }
+  .tab { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 6px; text-align: center; font-size: 12px; }
+  .tab b { display: block; font-size: 14px; }
+
+  footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 13px; color: var(--muted); }
+  @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="hero">
+    <div class="mark" aria-hidden="true"><span class="w"></span><span class="l"></span><span class="r"></span></div>
+    <div class="eyebrow">スマートフォン向け 使い方ガイド</div>
+    <h1>WinDays スマホ版マニュアル</h1>
+    <p class="lede">仕事もレジャーも 1 本のタイムラインに記録して、時間の使い方とバランスをふりかえるアプリです。このページでは、登録から毎日の記録、ふりかえりまでを順に説明します。</p>
+    <div class="meta">
+      <span>アプリ: <code>https://days.winroad.org/</code></span>
+      <span>版: Phase 1（2026年9月）</span>
+    </div>
+  </header>
+
+  <nav class="toc" aria-label="目次">
+    <ol>
+      <li><a href="#s1">登録とログイン</a></li>
+      <li><a href="#s2">画面の見かた</a></li>
+      <li><a href="#s3">ワンタップで記録</a></li>
+      <li><a href="#s4">あとから帯入力</a></li>
+      <li><a href="#s5">ふりかえり</a></li>
+      <li><a href="#s6">カテゴリ</a></li>
+      <li><a href="#s7">ホーム画面に追加</a></li>
+      <li><a href="#s8">設定と困ったとき</a></li>
+    </ol>
+  </nav>
+
+  <section id="s1">
+    <h2><span class="no">01</span>登録とログイン</h2>
+    <p>WinDays のアカウントは、タスク管理アプリ WinTask と共通です。どちらかで作ったアカウントは、もう一方でもそのまま使えます。</p>
+    <h3>はじめて使うとき</h3>
+    <ol class="steps">
+      <li>スマホのブラウザで <code>days.winroad.org</code> を開き、<kbd class="ui">無料で始める</kbd> をタップします。</li>
+      <li>表示名・メールアドレス・パスワード（8 文字以上）を入力します。パスワード欄の右端の目のアイコンで、入力内容の表示と非表示を切り替えられます。</li>
+      <li>利用規約とプライバシーポリシーに同意する（必須）にチェックを入れます。お知らせメールの受け取りは任意です。</li>
+      <li><kbd class="ui">アカウントを作成</kbd> をタップすると、すぐにアプリが使えます。</li>
+      <li>登録したメールアドレスに「【WinDays】メールアドレスの確認」が届きます。中のボタンを押して確認を完了してください。確認前でも記録はできますが、画面上部に再送の案内が出ます。</li>
+    </ol>
+    <h3>2 回目以降</h3>
+    <p>一度ログインすると、同じブラウザでは次回からログイン状態が続きます。ログアウトした場合は <kbd class="ui">ログイン</kbd> からメールアドレスとパスワードを入力してください。</p>
+    <div class="note warn"><strong>ログインを続けて失敗すると</strong>、同じ回線から 1 分間に 5 回までしか試せなくなります。しばらく待ってから再度お試しください。</div>
+  </section>
+
+  <section id="s2">
+    <h2><span class="no">02</span>画面の見かた</h2>
+    <p>ログイン後は、画面下の 4 つのタブで切り替えます。</p>
+    <div class="tabs" aria-label="下部タブ">
+      <div class="tab"><b>今日</b>記録する</div>
+      <div class="tab"><b>ふりかえり</b>週と日の内訳</div>
+      <div class="tab"><b>カテゴリ</b>分類を整える</div>
+      <div class="tab"><b>設定</b>アカウント</div>
+    </div>
+    <p>「今日」の画面は、上から順に <strong>記録バー</strong>（タップで開始・終了）、<strong>日付</strong>（左右の矢印で前日・翌日、日付をタップで今日に戻る）、<strong>その日の内訳</strong>、<strong>タイムライン</strong> の並びです。</p>
+    <figure class="phone">
+      <div class="screen">
+        <div class="running"><div><small>10:30 から</small><b>仕事 <span style="font-weight:400;font-size:13px">1時間20分</span></b></div><span class="stop">■ 終了</span></div>
+        <div class="bar">
+          <span class="chip on work">仕事</span><span class="chip work">会議</span><span class="chip life">家事</span><span class="chip life">移動</span><span class="chip rest">睡眠</span>
+        </div>
+        <div class="tl" aria-hidden="true">
+          <div class="h" style="top:0"><span>09:00</span></div>
+          <div class="h" style="top:48px"><span>10:00</span></div>
+          <div class="h" style="top:96px"><span>11:00</span></div>
+          <div class="h" style="top:144px"><span>12:00</span></div>
+          <div class="band" style="top:2px;height:44px;background:var(--rest)">移動 09:00〜09:55</div>
+          <div class="band" style="top:50px;height:20px;background:var(--work)">会議 10:00〜10:25</div>
+          <div class="band dash" style="top:74px;height:64px">仕事（記録中）</div>
+          <div class="now" style="top:140px"></div>
+        </div>
+      </div>
+      <figcaption>「今日」の画面イメージ。上の緑の枠が記録中、その下がカテゴリのチップ、下がタイムラインです。赤い線は現在時刻を示します。</figcaption>
+    </figure>
+    <p>タイムラインの帯の色はカテゴリの色です。カテゴリは 3 つの<strong>領域</strong>のどれかに属していて、ふりかえりではこの領域でバランスを集計します。</p>
+    <div class="legend" aria-label="領域の色">
+      <span style="--c: var(--work)">仕事</span>
+      <span style="--c: var(--life)">プライベート</span>
+      <span style="--c: var(--rest)">休息</span>
+    </div>
+  </section>
+
+  <section id="s3">
+    <h2><span class="no">03</span>ワンタップで記録する</h2>
+    <p>いま何をしているかを、その場でタップして記録する方法です。時刻を入力する必要はありません。</p>
+    <ol class="steps">
+      <li>「今日」の記録バーで、これから始めることのチップ（例: <kbd class="ui">仕事</kbd>）をタップします。その瞬間から記録が始まり、上に「記録中」の枠と経過時間が出ます。</li>
+      <li>別のことに移るときは、次のチップ（例: <kbd class="ui">移動</kbd>）をタップします。前の記録は自動で終了し、切れ目なく次の記録が始まります。</li>
+      <li>記録を止めるときは <kbd class="ui">終了</kbd> をタップします。</li>
+    </ol>
+    <div class="note">記録中はタイムラインに点線の帯として表示され、現在時刻まで伸びていきます。画面を閉じても記録は続くので、終了のタップを忘れないようにしてください。忘れた場合は、帯をタップして終了時刻をあとから直せます（次の章）。</div>
+  </section>
+
+  <section id="s4">
+    <h2><span class="no">04</span>あとから帯入力する</h2>
+    <p>寝る前に 1 日分をまとめて入力したり、記録し忘れた時間を埋めたりする方法です。</p>
+    <h3>追加する</h3>
+    <ol class="steps">
+      <li>タイムラインの空いている場所をタップするか、右下の <kbd class="ui">＋</kbd> をタップします。空いている場所をタップした場合は、その時刻が開始時刻に入ります。</li>
+      <li>カテゴリを選び、開始と終了の時刻を入れます。時刻は 5 分単位で入力できます。</li>
+      <li>必要ならメモ（例: 資料作成）を入れて、<kbd class="ui">保存</kbd> をタップします。</li>
+    </ol>
+    <h3>直す・消す</h3>
+    <ol class="steps">
+      <li>タイムラインの帯をタップすると、編集の画面が開きます。</li>
+      <li>カテゴリ・時刻・メモを直して <kbd class="ui">保存</kbd>、または <kbd class="ui">削除</kbd> をタップします。</li>
+    </ol>
+    <div class="note"><strong>同じ時間帯に 2 つの記録は置けません。</strong> 重なる時間があると「同じ時間帯に別の記録があります」と表示されるので、どちらかの時刻を直してください。ぴったり隣り合う（10:00 終了と 10:00 開始）のは問題ありません。</div>
+    <p>睡眠のように日をまたぐ記録は、前日の夜に開始して当日の朝に終了する形でそのまま入力できます。ふりかえりでは、日付の境目で自動的に按分されます。</p>
+  </section>
+
+  <section id="s5">
+    <h2><span class="no">05</span>ふりかえり</h2>
+    <p>「ふりかえり」タブでは、週と日の時間配分を見られます。週は日曜始まりで、上の矢印で前後の週に移動します。</p>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>表示</th><th>意味</th></tr></thead>
+        <tbody>
+          <tr><td>記録合計</td><td>その週に記録した時間の合計</td></tr>
+          <tr><td>仕事の割合</td><td>休息を除いた時間のうち、仕事の領域が占める割合</td></tr>
+          <tr><td>休息</td><td>休息の領域（睡眠など）の 1 日平均</td></tr>
+          <tr><td>積み上げ棒</td><td>曜日ごとの内訳。下から仕事・プライベート・休息の順。<kbd class="ui">表で見る</kbd> で数値の表に切り替え</td></tr>
+          <tr><td>カテゴリ別（週）</td><td>カテゴリごとの合計時間と、週全体に占める割合</td></tr>
+          <tr><td>今日の内訳</td><td>その日の領域別の円グラフ。中央の数字は記録した時間</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note">無料プランでふりかえれるのは<strong>直近 4 週</strong>までです。それより前の週に移動すると案内が表示されます。記録そのものはいつでも入力できます。</div>
+  </section>
+
+  <section id="s6">
+    <h2><span class="no">06</span>カテゴリを整える</h2>
+    <p>はじめは 10 種類のカテゴリ（仕事・会議・学習・家事・食事・移動・レジャー・運動・睡眠・その他）が用意されています。自分の生活に合わせて追加や整理ができます。</p>
+    <ol class="steps">
+      <li>「カテゴリ」タブで <kbd class="ui">追加</kbd> をタップします。</li>
+      <li>名前を入れ、領域（仕事・プライベート・休息）と色を選びます。色はふりかえりの見やすさのため、近い色を避けると判別しやすくなります。</li>
+      <li><kbd class="ui">保存</kbd> をタップします。追加したカテゴリは「今日」のチップにも出ます。</li>
+    </ol>
+    <p>使わなくなったカテゴリは、右のアーカイブのアイコンで一覧から隠せます。過去の記録はそのまま残り、「アーカイブ済み」から復元もできます。</p>
+  </section>
+
+  <section id="s7">
+    <h2><span class="no">07</span>ホーム画面に追加する</h2>
+    <p>アプリのようにホーム画面から開けるようにしておくと、ワンタップ記録がすぐにできます。インストールは不要です。</p>
+    <h3>iPhone（Safari）</h3>
+    <ol class="steps">
+      <li>Safari で <code>days.winroad.org</code> を開きます。</li>
+      <li>画面下の共有ボタン（四角から矢印が出ているアイコン）をタップします。</li>
+      <li><kbd class="ui">ホーム画面に追加</kbd> を選び、<kbd class="ui">追加</kbd> をタップします。</li>
+    </ol>
+    <h3>Android（Chrome）</h3>
+    <ol class="steps">
+      <li>Chrome で <code>days.winroad.org</code> を開きます。</li>
+      <li>右上のメニュー（縦の点 3 つ）をタップします。</li>
+      <li><kbd class="ui">ホーム画面に追加</kbd>（または <kbd class="ui">アプリをインストール</kbd>）を選びます。</li>
+    </ol>
+  </section>
+
+  <section id="s8">
+    <h2><span class="no">08</span>設定と困ったとき</h2>
+    <h3>設定でできること</h3>
+    <ul class="plain">
+      <li><strong>WinTask を開く</strong>: 同じアカウントでタスク管理アプリ WinTask に移動します。</li>
+      <li><strong>ログアウト</strong>: この端末のログイン状態を解除します。</li>
+      <li><strong>アカウントの削除</strong>: パスワードを入力して削除します。WinDays と WinTask の両方のデータが消え、元に戻せません。チームのオーナーになっている場合は先に譲渡が必要です。</li>
+    </ul>
+    <h3>よくある質問</h3>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>こんなとき</th><th>対処</th></tr></thead>
+        <tbody>
+          <tr><td>確認メールが届かない</td><td>迷惑メールフォルダを確認してください。画面上部の「再送」からもう一度送れます（1 分に 3 回まで）。</td></tr>
+          <tr><td>「通信に失敗しました」と出る</td><td>電波の状態を確認し、ページを再読み込みしてください。続く場合はいったんログアウトして、再度ログインしてください。</td></tr>
+          <tr><td>終了を忘れて記録が伸び続けている</td><td>「今日」で <kbd class="ui">終了</kbd> をタップしたあと、その帯をタップして終了時刻を正しい時刻に直してください。</td></tr>
+          <tr><td>記録が保存できない</td><td>同じ時間帯に別の記録がないか、終了が開始より後になっているかを確認してください。1 つの記録は 36 時間以内です。</td></tr>
+          <tr><td>前の日の記録を見たい</td><td>「今日」の日付の左の矢印で前日に移動します。日付をタップすると今日に戻ります。</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note">この版（Phase 1）では、帯を指でドラッグして伸び縮みさせる操作、圏外での入力の同期、予定や習慣の機能はまだありません。今後の更新で追加していきます。</div>
+  </section>
+
+  <footer>
+    WinDays は株式会社ウィンロードが提供しています。
+    <a href="https://win-task.winroad.org/terms.html">利用規約</a> ・ <a href="https://win-task.winroad.org/privacy.html">プライバシーポリシー</a>
+  </footer>
+</div>
+</body>
+</html>

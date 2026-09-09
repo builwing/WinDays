@@ -85,6 +85,7 @@ export default function Settings() {
 
       <section className="mt-3 rounded-lg border border-slate-200 bg-white p-4 text-sm">
         <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
+          <a href="/manual.html" target="_blank" rel="noreferrer" className="underline">使い方マニュアル</a>
           <a href="https://win-task.winroad.org/terms.html" target="_blank" rel="noreferrer" className="underline">利用規約</a>
           <a href="https://win-task.winroad.org/privacy.html" target="_blank" rel="noreferrer" className="underline">プライバシーポリシー</a>
         </div>

@@ -37,7 +37,10 @@ export default function Landing() {
           </span>
           WinDays
         </div>
-        <Link to="/login" className="text-sm text-slate-600 underline">ログイン</Link>
+        <div className="flex items-center gap-4 text-sm">
+          <a href="/manual.html" className="text-slate-600 underline">使い方</a>
+          <Link to="/login" className="text-slate-600 underline">ログイン</Link>
+        </div>
       </header>
 
       <section className="py-8">
