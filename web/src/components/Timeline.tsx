@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import type { Segment } from '@/api/types'
+import type { Memo, Segment } from '@/api/types'
 import { DAY_MINUTES, formatClock, minutesIntoDay, snapMinutes, toDateKey } from '@/lib/time'
 
 const PX_PER_MIN = 0.8 // 1 時間 = 48px
@@ -11,13 +11,15 @@ interface Props {
   running: Segment | null
   onSelect: (segment: Segment) => void
   onCreateAt: (minutes: number) => void
+  memos?: Memo[]
+  onSelectMemo?: (memo: Memo) => void
 }
 
 /**
  * 1 日の縦タイムライン。セグメントを帯で表示し、空白タップで新規入力、帯タップで編集。
  * ドラッグ編集は Phase 2。日跨ぎは API の clip_start/clip_end で当日分だけ描く。
  */
-export default function Timeline({ dayKey, segments, running, onSelect, onCreateAt }: Props) {
+export default function Timeline({ dayKey, segments, running, onSelect, onCreateAt, memos = [], onSelectMemo }: Props) {
   const ref = useRef<HTMLDivElement>(null)
   const isToday = dayKey === toDateKey(new Date())
 
@@ -94,6 +96,27 @@ export default function Timeline({ dayKey, segments, running, onSelect, onCreate
             <span className="font-semibold leading-[18px]">{running.category?.name}（記録中）</span>
           </div>
         )}
+
+        {/* メモの目印（右端）。タップで編集 */}
+        {memos.map((m) => {
+          const at = minutesIntoDay(m.noted_at, dayKey)
+          return (
+            <button
+              key={`memo-${m.id}`}
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation()
+                onSelectMemo?.(m)
+              }}
+              className="absolute -right-2 z-[1] flex h-5 w-5 items-center justify-center rounded-full bg-life text-white shadow"
+              style={{ top: at * PX_PER_MIN - 10 }}
+              aria-label={`メモ ${formatClock(m.noted_at)}: ${m.body.slice(0, 20)}`}
+              title={m.body}
+            >
+              <span className="text-[10px] leading-none">✎</span>
+            </button>
+          )
+        })}
 
         {/* 現在時刻 */}
         {nowMin !== null && (

@@ -83,3 +83,12 @@ export interface PlanLimitError {
   message: string
   upgradeable: boolean
 }
+
+export interface Memo {
+  id: number
+  user_id: number
+  segment_id: number | null
+  noted_at: string
+  body: string
+  segment?: { id: number; category?: CategoryLite } | null
+}

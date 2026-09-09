@@ -1,5 +1,5 @@
 import { api } from '@/lib/api'
-import type { Category, DayDashboard, Domain, Segment, SegmentsResponse, WeekDashboard } from './types'
+import type { Category, DayDashboard, Domain, Memo, Segment, SegmentsResponse, WeekDashboard } from './types'
 
 // ---- カテゴリ ----
 export async function listCategories(archived = false): Promise<Category[]> {
@@ -86,4 +86,29 @@ export async function getWeekDashboard(date: string): Promise<WeekDashboard> {
 export function funnel(name: string, props?: Record<string, unknown>): void {
   // 失敗しても UI に影響させない
   api.post('/days/funnel', { name, props }).catch(() => undefined)
+}
+
+// ---- いつでもメモ ----
+export async function listMemos(date: string): Promise<Memo[]> {
+  const { data } = await api.get<Memo[]>('/days/memos', { params: { date } })
+  return data
+}
+
+export async function searchMemos(q: string): Promise<Memo[]> {
+  const { data } = await api.get<Memo[]>('/days/memos', { params: { q } })
+  return data
+}
+
+export async function createMemo(input: { body: string; noted_at?: string }): Promise<Memo> {
+  const { data } = await api.post<Memo>('/days/memos', input)
+  return data
+}
+
+export async function updateMemo(id: number, input: Partial<{ body: string; noted_at: string }>): Promise<Memo> {
+  const { data } = await api.patch<Memo>(`/days/memos/${id}`, input)
+  return data
+}
+
+export async function deleteMemo(id: number): Promise<void> {
+  await api.delete(`/days/memos/${id}`)
 }

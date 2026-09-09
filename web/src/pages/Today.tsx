@@ -2,13 +2,15 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ChevronLeft, ChevronRight, Plus } from 'lucide-react'
 import * as days from '@/api/days'
-import type { Segment } from '@/api/types'
+import type { Memo, Segment } from '@/api/types'
 import { errorMessage } from '@/lib/api'
-import { formatDateLabel, formatMinutes, shiftDateKey, toDateKey } from '@/lib/time'
+import { formatClock, formatDateLabel, formatMinutes, shiftDateKey, toDateKey } from '@/lib/time'
 import QuickStart from '@/components/QuickStart'
 import Timeline from '@/components/Timeline'
 import SegmentSheet, { type SheetValue } from '@/components/SegmentSheet'
 import { DomainDonut } from '@/components/charts'
+import { useMemoSheet } from '@/stores/memoSheet'
+import { PenLine } from 'lucide-react'
 
 const FIRST_SEGMENT_KEY = 'windays.first_segment'
 
@@ -23,6 +25,8 @@ export default function Today() {
   const categories = useQuery({ queryKey: ['categories'], queryFn: () => days.listCategories() })
   const segments = useQuery({ queryKey: ['segments', dayKey], queryFn: () => days.listSegments(dayKey) })
   const dashboard = useQuery({ queryKey: ['dashboard', 'day', dayKey], queryFn: () => days.getDayDashboard(dayKey), retry: false })
+  const memos = useQuery({ queryKey: ['memos', dayKey], queryFn: () => days.listMemos(dayKey) })
+  const openMemoEdit = useMemoSheet((s) => s.openEdit)
 
   const invalidate = useCallback(() => {
     qc.invalidateQueries({ queryKey: ['segments'] })
@@ -139,11 +143,36 @@ export default function Today() {
         </div>
       )}
 
+      {memos.data && memos.data.length > 0 && (
+        <section className="mx-4 mb-2 rounded-lg border border-slate-200 bg-white" aria-label="この日のメモ">
+          <h2 className="flex items-center gap-1 px-3 pt-2 text-xs font-semibold text-slate-500">
+            <PenLine size={12} aria-hidden /> メモ {memos.data.length} 件
+          </h2>
+          <ul className="divide-y divide-slate-100">
+            {memos.data.map((m: Memo) => (
+              <li key={m.id}>
+                <button type="button" onClick={() => openMemoEdit(m)} className="flex w-full items-start gap-3 px-3 py-2 text-left text-sm">
+                  <span className="mt-0.5 font-mono text-xs text-slate-400">{formatClock(m.noted_at)}</span>
+                  <span className="flex-1 whitespace-pre-wrap break-words text-slate-700">{m.body}</span>
+                  {m.segment?.category && (
+                    <span className="mt-0.5 shrink-0 rounded-full px-2 text-[10px] text-white" style={{ backgroundColor: m.segment.category.color }}>
+                      {m.segment.category.name}
+                    </span>
+                  )}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       {segments.data && (
         <Timeline
           dayKey={dayKey}
           segments={segments.data.segments}
           running={segments.data.running}
+          memos={memos.data ?? []}
+          onSelectMemo={openMemoEdit}
           onSelect={(s) => {
             setError(null)
             setSheet({ segment: s })
