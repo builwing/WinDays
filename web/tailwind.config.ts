@@ -6,9 +6,9 @@ export default {
     extend: {
       colors: {
         // 領域（ドメイン）の色: work / life / rest
-        work: '#0f766e',
+        work: '#0d9488',
         life: '#d97706',
-        rest: '#475569',
+        rest: '#6366f1',
       },
     },
   },

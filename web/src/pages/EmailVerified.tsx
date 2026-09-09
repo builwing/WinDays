@@ -16,7 +16,7 @@ export default function EmailVerified() {
           ? 'ご登録ありがとうございます。WinDays をお使いいただけます。'
           : 'リンクの有効期限が切れているか、URL が正しくありません。アプリから確認メールを再送してください。'}
       </p>
-      <Link to="/" className="rounded-md bg-work px-4 py-2 text-white">
+      <Link to="/app" className="rounded-md bg-work px-4 py-2 text-white">
         WinDays を開く
       </Link>
     </main>

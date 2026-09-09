@@ -35,6 +35,40 @@ api.interceptors.request.use((config) => {
   return config
 })
 
+/** 401 時にセッションを破棄するためのフック（stores/auth が登録） */
+let onUnauthorized: (() => void) | null = null
+export function setUnauthorizedHandler(fn: () => void): void {
+  onUnauthorized = fn
+}
+
+api.interceptors.response.use(
+  (res) => res,
+  (error) => {
+    const status = error?.response?.status
+    const url: string = error?.config?.url ?? ''
+    if (status === 401 && !url.endsWith('/login') && !url.endsWith('/register')) {
+      onUnauthorized?.()
+    }
+    return Promise.reject(error)
+  },
+)
+
+/** API のエラー本文からユーザー向けメッセージを取り出す。 */
+export function errorMessage(error: unknown, fallback = '通信に失敗しました。'): string {
+  const e = error as { response?: { data?: { message?: string; errors?: Record<string, string[]> } } }
+  const data = e?.response?.data
+  if (data?.errors) {
+    const first = Object.values(data.errors)[0]
+    if (first?.[0]) return first[0]
+  }
+  return data?.message || fallback
+}
+
+export function isPlanLimit(error: unknown): boolean {
+  const e = error as { response?: { status?: number; data?: { error?: string } } }
+  return e?.response?.status === 402 && e.response.data?.error === 'plan_limit'
+}
+
 /**
  * API 疎通確認。`/up` は CORS 対象外（WinTask の cors.paths は api/* のみ）で
  * ブラウザからは読めないため、CORS 対象の `/api/v1/me` を未認証で叩き、
