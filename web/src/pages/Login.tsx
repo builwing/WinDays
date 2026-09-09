@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import * as auth from '@/api/auth'
 import { errorMessage } from '@/lib/api'
 import { useAuth } from '@/stores/auth'
-import { Field } from '@/components/Field'
+import { Field, PasswordField } from '@/components/Field'
 
 export default function Login() {
   const nav = useNavigate()
@@ -34,7 +34,7 @@ export default function Login() {
       <p className="mt-1 text-sm text-slate-600">WinTask のアカウントでもログインできます。</p>
       <form onSubmit={submit} className="mt-6 space-y-4">
         <Field label="メールアドレス" name="email" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
-        <Field label="パスワード" name="password" type="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} />
+        <PasswordField label="パスワード" name="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} />
         {error && <p className="text-sm text-red-600" role="alert">{error}</p>}
         <button type="submit" disabled={busy} className="w-full rounded-md bg-work px-4 py-2.5 font-medium text-white disabled:opacity-50">
           ログイン

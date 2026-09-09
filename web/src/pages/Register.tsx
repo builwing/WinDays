@@ -5,7 +5,7 @@ import { funnel } from '@/api/days'
 import { errorMessage } from '@/lib/api'
 import { gaEvent } from '@/lib/ga'
 import { useAuth } from '@/stores/auth'
-import { Field } from '@/components/Field'
+import { Field, PasswordField } from '@/components/Field'
 
 export default function Register() {
   const nav = useNavigate()
@@ -46,7 +46,7 @@ export default function Register() {
       <form onSubmit={submit} className="mt-6 space-y-4">
         <Field label="表示名" name="name" autoComplete="nickname" required maxLength={255} value={name} onChange={(e) => setName(e.target.value)} />
         <Field label="メールアドレス" name="email" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} hint="確認メールを送ります" />
-        <Field label="パスワード（8 文字以上）" name="password" type="password" autoComplete="new-password" required minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} />
+        <PasswordField label="パスワード（8 文字以上）" name="password" autoComplete="new-password" required minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} />
         <label className="flex items-start gap-2 text-sm">
           <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} className="mt-1" required />
           <span>

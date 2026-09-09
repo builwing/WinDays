@@ -5,7 +5,7 @@ import * as auth from '@/api/auth'
 import { errorMessage } from '@/lib/api'
 import { getConsent, gaEnabled, setConsent } from '@/lib/ga'
 import { useAuth } from '@/stores/auth'
-import { Button, Field } from '@/components/Field'
+import { Button, PasswordField } from '@/components/Field'
 
 const TASK_URL = import.meta.env.VITE_TASK_URL
 
@@ -98,7 +98,7 @@ export default function Settings() {
           <Button variant="secondary" className="mt-2" onClick={() => setConfirmDelete(true)}>削除に進む</Button>
         ) : (
           <div className="mt-2 space-y-2">
-            <Field label="確認のためパスワードを入力" name="password" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} />
+            <PasswordField label="確認のためパスワードを入力" name="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} />
             <div className="flex gap-2">
               <Button variant="danger" onClick={removeAccount} disabled={busy || !password}>アカウントを削除する</Button>
               <Button variant="secondary" onClick={() => setConfirmDelete(false)}>やめる</Button>
