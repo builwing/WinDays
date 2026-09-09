@@ -35,11 +35,19 @@ api.interceptors.request.use((config) => {
   return config
 })
 
-/** Laravel のヘルスチェック（`/up`）。API 疎通確認用。 */
+/**
+ * API 疎通確認。`/up` は CORS 対象外（WinTask の cors.paths は api/* のみ）で
+ * ブラウザからは読めないため、CORS 対象の `/api/v1/me` を未認証で叩き、
+ * 401（到達している）または 200 を疎通 OK とみなす。
+ */
 export async function checkApiHealth(): Promise<boolean> {
   try {
-    const res = await axios.get(`${API_ORIGIN}/up`, { timeout: 5000 })
-    return res.status === 200
+    const res = await axios.get(`${API_BASE}/me`, {
+      timeout: 5000,
+      headers: { Accept: 'application/json' },
+      validateStatus: (status) => status === 200 || status === 401,
+    })
+    return res.status === 200 || res.status === 401
   } catch {
     return false
   }
