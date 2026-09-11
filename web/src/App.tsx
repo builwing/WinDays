@@ -11,6 +11,7 @@ import Dashboard from '@/pages/Dashboard'
 import Categories from '@/pages/Categories'
 import Settings from '@/pages/Settings'
 import EmailVerified from '@/pages/EmailVerified'
+import Welcome from '@/pages/Welcome'
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 15_000, refetchOnWindowFocus: true } },
@@ -31,6 +32,7 @@ export default function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/email-verified" element={<EmailVerified />} />
           <Route element={<RequireAuth />}>
+            <Route path="/app/welcome" element={<Welcome />} />
             <Route path="/app" element={<AppShell />}>
               <Route index element={<Today />} />
               <Route path="dashboard" element={<Dashboard />} />

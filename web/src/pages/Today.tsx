@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, Navigate, useSearchParams } from 'react-router-dom'
+import { useAuth } from '@/stores/auth'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { CalendarPlus, ChevronLeft, ChevronRight, Plus } from 'lucide-react'
 import * as days from '@/api/days'
@@ -24,6 +25,7 @@ const RUN_ACTIONS: PlanRunAction[] = ['ok', 'change', 'shift', 'skip', 'resume_p
 /** 「今日」画面: タイムライン＋ワンタップ計測＋その日の内訳。 */
 export default function Today() {
   const qc = useQueryClient()
+  const user = useAuth((s) => s.user)
   const [dayKey, setDayKey] = useState(toDateKey(new Date()))
   const [sheet, setSheet] = useState<{ segment: Segment | null; minutes?: number } | null>(null)
   const [planSheet, setPlanSheet] = useState<{ plan: Plan | null; minutes?: number } | null>(null)
@@ -177,7 +179,7 @@ export default function Today() {
   const savePlan = async (v: PlanSheetValue) => {
     setError(null)
     try {
-      const input = { title: v.title || null, days_category_id: v.days_category_id, starts_at: v.starts_at, ends_at: v.ends_at, description: v.description || null }
+      const input = { title: v.title || null, days_category_id: v.days_category_id, days_auto_track: v.days_auto_track, starts_at: v.starts_at, ends_at: v.ends_at, description: v.description || null }
       if (planSheet?.plan) {
         await days.updatePlan(planSheet.plan.id, input, v.scope)
       } else {
@@ -221,6 +223,9 @@ export default function Today() {
 
   const activeCategories = useMemo(() => (categories.data ?? []).filter((c) => !c.archived_at), [categories.data])
   const isToday = dayKey === toDateKey(new Date())
+
+  // 初回設定ウィザードが未完了なら先に案内する（スキップしても完了扱いになる）
+  if (user && !user.days_onboarded_at) return <Navigate to="/app/welcome" replace />
 
   return (
     <div>

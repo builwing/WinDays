@@ -7,6 +7,7 @@ export interface User {
   email_verified_at: string | null
   signup_source: string | null
   marketing_opt_in_at: string | null
+  days_onboarded_at?: string | null
 }
 
 export interface Category {

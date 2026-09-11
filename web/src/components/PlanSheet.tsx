@@ -11,6 +11,7 @@ export interface PlanSheetValue {
   starts_at: string
   ends_at: string
   description: string
+  days_auto_track: boolean      // この予定を自動記録の対象にするか
   rrule: string | null          // 新規のときだけ（繰り返しの作成）
   skip_nonworking: boolean      // 土日祝をスキップ（skip_weekends + skip_holidays）
   scope: PlanScope              // 展開済みの回を編集するときの反映範囲
@@ -59,6 +60,7 @@ export default function PlanSheet({ dayKey, categories, plan, initialMinutes = 9
   const [byday, setByday] = useState<string[]>([])
   const [skipNonworking, setSkipNonworking] = useState(false)
   const [scope, setScope] = useState<PlanScope>('this')
+  const [autoTrack, setAutoTrack] = useState<boolean>(plan?.days_auto_track ?? true)
   const isOccurrence = plan !== null && plan.recurrence_parent_id !== null
   const parentRule = plan?.rrule ?? null
 
@@ -86,6 +88,7 @@ export default function PlanSheet({ dayKey, categories, plan, initialMinutes = 9
         starts_at: dayMinutesToISO(dayKey, fromHM(start)),
         ends_at: dayMinutesToISO(dayKey, fromHM(end) === 0 && fromHM(start) > 0 ? 24 * 60 : fromHM(end)),
         description: description.trim(),
+        days_auto_track: autoTrack,
         rrule: plan ? null : buildRrule(preset, byday, fromDateKey(dayKey)),
         skip_nonworking: skipNonworking,
         scope,
@@ -150,6 +153,12 @@ export default function PlanSheet({ dayKey, categories, plan, initialMinutes = 9
             <input type="time" step={300} value={end} onChange={(e) => setEnd(e.target.value)} className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-base" />
           </label>
         </div>
+        {categoryId !== null && (
+          <label className="mt-3 flex items-center justify-between gap-3 text-sm">
+            <span>この予定を自動記録する<span className="block text-xs text-slate-500">開始・終了の時刻に確認が出て、放置すると予定どおり記録されます。</span></span>
+            <input type="checkbox" className="h-5 w-5" checked={autoTrack} onChange={(e) => setAutoTrack(e.target.checked)} />
+          </label>
+        )}
         <label className="mt-3 block text-sm">
           <span className="text-slate-600">メモ（任意）</span>
           <input value={description} onChange={(e) => setDescription(e.target.value)} maxLength={2000} className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-base" placeholder="例: 議題は来期の計画" />

@@ -1,5 +1,5 @@
 import { api } from '@/lib/api'
-import type { AutoTrackSettings, Category, DayDashboard, DaysNotification, Domain, Memo, Plan, PlanRun, PlanRunAction, PlanRunsResponse, PlanScope, PlansResponse, PushPublicKey, PushSubscriptionInfo, Segment, SegmentsResponse, WeekDashboard } from './types'
+import type { AutoTrackSettings, Category, DayDashboard, DaysNotification, Domain, Memo, Plan, PlanRun, PlanRunAction, PlanRunsResponse, PlanScope, PlansResponse, PushPublicKey, PushSubscriptionInfo, Segment, SegmentsResponse, User, WeekDashboard } from './types'
 
 // ---- カテゴリ ----
 export async function listCategories(archived = false): Promise<Category[]> {
@@ -211,5 +211,21 @@ export async function unregisterPush(endpoint: string): Promise<void> {
 
 export async function sendTestPush(): Promise<{ sent: number; enabled: boolean }> {
   const { data } = await api.post<{ sent: number; enabled: boolean }>('/days/push/test')
+  return data
+}
+
+// ---- 初回設定ウィザード ----
+export interface OnboardingPlan {
+  title?: string | null
+  days_category_id: number
+  starts_at: string
+  ends_at: string
+  rrule: string
+  skip_weekends?: boolean
+  skip_holidays?: boolean
+}
+
+export async function completeOnboarding(plans: OnboardingPlan[]): Promise<{ user: User; plans: Plan[] }> {
+  const { data } = await api.post<{ user: User; plans: Plan[] }>('/days/onboarding', { plans })
   return data
 }
