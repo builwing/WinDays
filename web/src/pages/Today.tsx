@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { CalendarPlus, ChevronLeft, ChevronRight, Plus } from 'lucide-react'
 import * as days from '@/api/days'
@@ -13,9 +14,12 @@ import ConfirmCards from '@/components/ConfirmCards'
 import TodayPlans from '@/components/TodayPlans'
 import { DomainDonut } from '@/components/charts'
 import { useMemoSheet } from '@/stores/memoSheet'
+import { pushStatus } from '@/lib/push'
 import { PenLine } from 'lucide-react'
 
 const FIRST_SEGMENT_KEY = 'windays.first_segment'
+const PUSH_HINT_KEY = 'windays.push_hint_dismissed'
+const RUN_ACTIONS: PlanRunAction[] = ['ok', 'change', 'shift', 'skip', 'resume_previous', 'continue', 'extend', 'stop_now']
 
 /** 「今日」画面: タイムライン＋ワンタップ計測＋その日の内訳。 */
 export default function Today() {
@@ -35,6 +39,9 @@ export default function Today() {
   // 自動記録の状態。今日は 30 秒ごとに更新（サーバーの毎分処理を拾う）
   const runs = useQuery({ queryKey: ['plan-runs', dayKey], queryFn: () => days.listPlanRuns(dayKey), refetchInterval: isTodayKey ? 30_000 : false })
   const openMemoEdit = useMemoSheet((s) => s.openEdit)
+  const [params, setParams] = useSearchParams()
+  const handledParam = useRef<string | null>(null)
+  const [pushHint, setPushHint] = useState(false)
 
   const invalidate = useCallback(() => {
     qc.invalidateQueries({ queryKey: ['segments'] })
@@ -72,6 +79,41 @@ export default function Today() {
       setError(errorMessage(e))
     } finally {
       setBusy(false)
+    }
+  }
+
+  // 通知の操作ボタン（Android）から /app?run=<id>&act=<action> で開かれたとき、その操作を実行する
+  useEffect(() => {
+    const runId = params.get('run')
+    const act = params.get('act') as PlanRunAction | null
+    if (!runId || !act || !RUN_ACTIONS.includes(act)) return
+    const key = `${runId}:${act}`
+    if (handledParam.current === key) return
+    handledParam.current = key
+    days
+      .actPlanRun(Number(runId), act === 'change' ? 'ok' : act, act === 'extend' ? { minutes: 30 } : {})
+      .then(() => invalidate())
+      .catch((e) => setError(errorMessage(e)))
+      .finally(() => setParams({}, { replace: true }))
+  }, [params, setParams, invalidate])
+
+  // 通知の案内: 今日に予定があり、まだ購読していない端末にだけ 1 回出す
+  useEffect(() => {
+    if (!isTodayKey || !plans.data || plans.data.plans.length === 0) return
+    try {
+      if (localStorage.getItem(PUSH_HINT_KEY)) return
+    } catch {
+      return
+    }
+    pushStatus().then((s) => setPushHint(s === 'unsubscribed' || s === 'ios-not-installed'))
+  }, [isTodayKey, plans.data])
+
+  const dismissPushHint = () => {
+    setPushHint(false)
+    try {
+      localStorage.setItem(PUSH_HINT_KEY, '1')
+    } catch {
+      /* ignore */
     }
   }
 
@@ -200,6 +242,13 @@ export default function Today() {
       {error && !sheet && !planSheet && (
         <p className="mx-4 mb-2 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">
           {error}
+        </p>
+      )}
+
+      {pushHint && (
+        <p className="mx-4 mb-2 flex items-center gap-2 rounded-md bg-sky-50 px-3 py-2 text-xs text-sky-800">
+          <span className="flex-1">予定の開始・終了の確認を通知で受け取れます。<Link to="/app/settings" className="underline">設定で有効にする</Link></span>
+          <button type="button" onClick={dismissPushHint} className="text-sky-600" aria-label="閉じる">×</button>
         </p>
       )}
 

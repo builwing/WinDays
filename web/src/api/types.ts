@@ -178,3 +178,17 @@ export interface DaysNotification {
   acted_at: string | null
   action: string | null
 }
+
+export interface PushPublicKey {
+  enabled: boolean
+  public_key: string | null
+}
+
+export interface PushSubscriptionInfo {
+  id: number
+  kind: string
+  user_agent: string | null
+  last_used_at: string | null
+  failed_at: string | null
+  created_at: string
+}

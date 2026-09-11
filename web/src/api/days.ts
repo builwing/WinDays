@@ -1,5 +1,5 @@
 import { api } from '@/lib/api'
-import type { AutoTrackSettings, Category, DayDashboard, DaysNotification, Domain, Memo, Plan, PlanRun, PlanRunAction, PlanRunsResponse, PlanScope, PlansResponse, Segment, SegmentsResponse, WeekDashboard } from './types'
+import type { AutoTrackSettings, Category, DayDashboard, DaysNotification, Domain, Memo, Plan, PlanRun, PlanRunAction, PlanRunsResponse, PlanScope, PlansResponse, PushPublicKey, PushSubscriptionInfo, Segment, SegmentsResponse, WeekDashboard } from './types'
 
 // ---- カテゴリ ----
 export async function listCategories(archived = false): Promise<Category[]> {
@@ -187,5 +187,29 @@ export async function updateAutoTrackSettings(input: Partial<AutoTrackSettings>)
 
 export async function listNotifications(): Promise<DaysNotification[]> {
   const { data } = await api.get<DaysNotification[]>('/days/notifications')
+  return data
+}
+
+// ---- Web Push ----
+export async function getPushPublicKey(): Promise<PushPublicKey> {
+  const { data } = await api.get<PushPublicKey>('/days/push/public-key')
+  return data
+}
+
+export async function listPushSubscriptions(): Promise<PushSubscriptionInfo[]> {
+  const { data } = await api.get<PushSubscriptionInfo[]>('/days/push-subscriptions')
+  return data
+}
+
+export async function registerPush(sub: PushSubscriptionJSON): Promise<void> {
+  await api.post('/days/push-subscriptions', { endpoint: sub.endpoint, keys: sub.keys, user_agent: navigator.userAgent.slice(0, 255) })
+}
+
+export async function unregisterPush(endpoint: string): Promise<void> {
+  await api.delete('/days/push-subscriptions', { data: { endpoint } })
+}
+
+export async function sendTestPush(): Promise<{ sent: number; enabled: boolean }> {
+  const { data } = await api.post<{ sent: number; enabled: boolean }>('/days/push/test')
   return data
 }

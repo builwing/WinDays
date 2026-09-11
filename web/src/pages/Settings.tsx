@@ -10,6 +10,7 @@ import { errorMessage } from '@/lib/api'
 import { getConsent, gaEnabled, setConsent } from '@/lib/ga'
 import { useAuth } from '@/stores/auth'
 import { Button, PasswordField } from '@/components/Field'
+import PushSettings from '@/components/PushSettings'
 
 const TASK_URL = import.meta.env.VITE_TASK_URL
 
@@ -126,6 +127,8 @@ export default function Settings() {
           </div>
         )}
       </section>
+
+      <PushSettings onMessage={setMsg} />
 
       <section className="mt-3 rounded-lg border border-slate-200 bg-white p-4 text-sm">
         <div className="flex items-center gap-1 font-medium"><Repeat size={16} aria-hidden /> 繰り返し予定</div>

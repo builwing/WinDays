@@ -9,7 +9,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg'],
+      includeAssets: ['favicon.svg', 'push-sw.js'],
       manifest: {
         name: 'WinDays − 行動ログ・時間の使い方記録',
         short_name: 'WinDays',
@@ -29,6 +29,8 @@ export default defineConfig({
         // API はキャッシュしない（常にネットワーク）。アプリシェルのみプリキャッシュ。
         navigateFallbackDenylist: [/^\/api\//],
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
+        // Web Push の受信と通知タップの処理（public/push-sw.js）
+        importScripts: ['push-sw.js'],
       },
     }),
   ],
