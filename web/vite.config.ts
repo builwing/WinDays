@@ -24,6 +24,14 @@ export default defineConfig({
           { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
           { src: '/icons/icon-512-maskable.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
+        // ホーム画面アイコンの長押しメニュー（Android / PC Chrome）。固定 URL なので枠へのカテゴリ割り当ては設定で行う
+        shortcuts: [
+          { name: '記録を終了', short_name: '終了', url: '/quick?stop=1', icons: [{ src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' }] },
+          { name: 'クイック 1 を開始', short_name: 'クイック 1', url: '/quick?slot=1', icons: [{ src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' }] },
+          { name: 'クイック 2 を開始', short_name: 'クイック 2', url: '/quick?slot=2', icons: [{ src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' }] },
+          { name: 'クイック 3 を開始', short_name: 'クイック 3', url: '/quick?slot=3', icons: [{ src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' }] },
+          { name: 'メモを書く', short_name: 'メモ', url: '/quick?memo=1', icons: [{ src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' }] },
+        ],
       },
       workbox: {
         // API はキャッシュしない（常にネットワーク）。アプリシェルのみプリキャッシュ。

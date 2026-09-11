@@ -5,6 +5,7 @@ import { funnel } from '@/api/days'
 import { errorMessage } from '@/lib/api'
 import { gaEvent } from '@/lib/ga'
 import { useAuth } from '@/stores/auth'
+import { afterLoginPath } from '@/lib/quick'
 import { Field, PasswordField } from '@/components/Field'
 
 export default function Register() {
@@ -31,7 +32,7 @@ export default function Register() {
       setSession(res.user, res.token)
       funnel('register.success', { opt_in: optIn })
       gaEvent('sign_up', { method: 'email' })
-      nav('/app')
+      nav(afterLoginPath())
     } catch (err) {
       setError(errorMessage(err))
     } finally {

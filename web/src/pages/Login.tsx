@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import * as auth from '@/api/auth'
 import { errorMessage } from '@/lib/api'
 import { useAuth } from '@/stores/auth'
+import { afterLoginPath } from '@/lib/quick'
 import { Field, PasswordField } from '@/components/Field'
 
 export default function Login() {
@@ -20,7 +21,7 @@ export default function Login() {
     try {
       const res = await auth.login(email, password)
       setSession(res.user, res.token)
-      nav('/app')
+      nav(afterLoginPath())
     } catch (err) {
       setError(errorMessage(err))
     } finally {

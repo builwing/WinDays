@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { ExternalLink, Repeat, Zap } from 'lucide-react'
+import { ExternalLink, Repeat, Smartphone, Zap } from 'lucide-react'
 import * as auth from '@/api/auth'
 import * as days from '@/api/days'
 import { describeRrule } from '@/lib/rrule'
@@ -21,6 +21,17 @@ export default function Settings() {
   const qc = useQueryClient()
   const recurring = useQuery({ queryKey: ['plans', 'recurring'], queryFn: () => days.listRecurringPlans() })
   const autoTrack = useQuery({ queryKey: ['auto-track-settings'], queryFn: () => days.getAutoTrackSettings() })
+  const categories = useQuery({ queryKey: ['categories'], queryFn: () => days.listCategories() })
+  const quickSlots = useQuery({ queryKey: ['quick-slots'], queryFn: () => days.getQuickSlots() })
+
+  const saveQuickSlot = async (slot: number, categoryId: number | null) => {
+    try {
+      const next = await days.updateQuickSlots([{ slot, category_id: categoryId }])
+      qc.setQueryData(['quick-slots'], next)
+    } catch (e) {
+      setMsg(errorMessage(e))
+    }
+  }
 
   const saveAutoTrack = async (input: Parameters<typeof days.updateAutoTrackSettings>[0]) => {
     try {
@@ -138,6 +149,27 @@ export default function Settings() {
       </section>
 
       <PushSettings onMessage={setMsg} />
+
+      <section className="mt-3 rounded-lg border border-slate-200 bg-white p-4 text-sm">
+        <div className="flex items-center gap-1 font-medium"><Smartphone size={16} aria-hidden /> ショートカット</div>
+        <p className="mt-1 text-xs text-slate-500">ホーム画面のアイコンを長押しすると「記録を終了」「クイック 1〜3 を開始」「メモを書く」が出ます（Android / PC の Chrome）。クイック 1〜3 に割り当てるカテゴリをここで選びます。未設定なら並び順の上から使われます。</p>
+        {quickSlots.data && categories.data && (
+          <div className="mt-2 space-y-2">
+            {quickSlots.data.map((q) => (
+              <label key={q.slot} className="flex items-center justify-between gap-3">
+                <span>クイック {q.slot}{!q.assigned && q.category && <span className="ml-1 text-xs text-slate-400">（自動）</span>}</span>
+                <select value={q.assigned && q.category ? q.category.id : ''} onChange={(e) => saveQuickSlot(q.slot, e.target.value ? Number(e.target.value) : null)} className="rounded-md border border-slate-300 px-2 py-1">
+                  <option value="">自動（{q.category?.name ?? 'なし'}）</option>
+                  {categories.data.filter((c) => !c.archived_at).map((c) => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+              </label>
+            ))}
+            <p className="text-xs text-slate-500">URL からも起動できます: <code>days.winroad.org/quick?start=仕事</code>（開始）・<code>/quick?stop=1</code>（終了）。iPhone のショートカット App や NFC タグに登録すると便利です。</p>
+          </div>
+        )}
+      </section>
 
       <section className="mt-3 rounded-lg border border-slate-200 bg-white p-4 text-sm">
         <div className="flex items-center gap-1 font-medium"><Repeat size={16} aria-hidden /> 繰り返し予定</div>

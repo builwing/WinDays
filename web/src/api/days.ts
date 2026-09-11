@@ -1,5 +1,5 @@
 import { api } from '@/lib/api'
-import type { AutoTrackSettings, Category, DayDashboard, DaysNotification, Domain, Memo, Plan, PlanRun, PlanRunAction, PlanRunsResponse, PlanScope, PlansResponse, PushPublicKey, PushSubscriptionInfo, Segment, SegmentsResponse, User, WeekDashboard } from './types'
+import type { AutoTrackSettings, Category, DayDashboard, DaysNotification, Domain, Memo, Plan, PlanRun, PlanRunAction, PlanRunsResponse, PlanScope, PlansResponse, PushPublicKey, PushSubscriptionInfo, QuickResult, QuickSlot, Segment, SegmentsResponse, User, WeekDashboard } from './types'
 
 // ---- カテゴリ ----
 export async function listCategories(archived = false): Promise<Category[]> {
@@ -72,6 +72,22 @@ export async function deleteSegment(id: number): Promise<void> {
 }
 
 // ---- ダッシュボード ----
+/** ショートカット起動: slot=1〜3 / start=<id|name> / stop。冪等。 */
+export async function quickSegment(body: { slot?: number; start?: string; stop?: boolean }): Promise<QuickResult> {
+  const { data } = await api.post<QuickResult>('/days/segments/quick', body)
+  return data
+}
+
+export async function getQuickSlots(): Promise<QuickSlot[]> {
+  const { data } = await api.get<QuickSlot[]>('/days/quick-slots')
+  return data
+}
+
+export async function updateQuickSlots(slots: { slot: number; category_id: number | null }[]): Promise<QuickSlot[]> {
+  const { data } = await api.put<QuickSlot[]>('/days/quick-slots', { slots })
+  return data
+}
+
 export async function getDayDashboard(date: string): Promise<DayDashboard> {
   const { data } = await api.get<DayDashboard>('/days/dashboard', { params: { range: 'day', date } })
   return data

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Link, Navigate, useSearchParams } from 'react-router-dom'
+import { Link, Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '@/stores/auth'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { CalendarPlus, ChevronLeft, ChevronRight, Plus } from 'lucide-react'
@@ -45,6 +45,18 @@ export default function Today() {
   const [params, setParams] = useSearchParams()
   const handledParam = useRef<string | null>(null)
   const [pushHint, setPushHint] = useState(false)
+  // ショートカット起動（/quick）からの結果トースト。数秒で消す
+  const location = useLocation()
+  const navigate = useNavigate()
+  const [toast, setToast] = useState<string | null>(null)
+  useEffect(() => {
+    const t = (location.state as { toast?: string } | null)?.toast
+    if (!t) return
+    setToast(t)
+    navigate(location.pathname, { replace: true, state: null })
+    const timer = setTimeout(() => setToast(null), 4000)
+    return () => clearTimeout(timer)
+  }, [location.state, location.pathname, navigate])
 
   const invalidate = useCallback(() => {
     qc.invalidateQueries({ queryKey: ['segments'] })
@@ -246,6 +258,11 @@ export default function Today() {
 
   return (
     <div>
+      {toast && (
+        <div className="fixed left-1/2 top-3 z-30 -translate-x-1/2 rounded-full bg-slate-800 px-4 py-2 text-sm text-white shadow" role="status" aria-live="polite">
+          {toast}
+        </div>
+      )}
       <QuickStart categories={activeCategories} running={segments.data?.running ?? null} onStart={start} onStop={stop} busy={busy} overrunHours={autoTrack.data?.overrun_hours ?? 0} />
 
       <header className="flex items-center justify-between px-4 py-2">

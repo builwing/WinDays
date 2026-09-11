@@ -106,6 +106,19 @@ export interface WeekDashboard extends DashboardBase {
   days: WeekDay[]
 }
 
+/** ショートカット起動のクイック枠（1〜3）。未割り当てなら並び順で代用される。 */
+export interface QuickSlot {
+  slot: number
+  assigned: boolean
+  category: CategoryLite | null
+}
+
+export interface QuickResult {
+  action: 'started' | 'stopped' | 'noop' | 'unassigned'
+  running: Segment | null
+  message: string
+}
+
 export interface PlanLimitError {
   error: 'plan_limit'
   feature: string
