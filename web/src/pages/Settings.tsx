@@ -1,7 +1,11 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ExternalLink } from 'lucide-react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { ExternalLink, Repeat } from 'lucide-react'
 import * as auth from '@/api/auth'
+import * as days from '@/api/days'
+import { describeRrule } from '@/lib/rrule'
+import { formatClock } from '@/lib/time'
 import { errorMessage } from '@/lib/api'
 import { getConsent, gaEnabled, setConsent } from '@/lib/ga'
 import { useAuth } from '@/stores/auth'
@@ -13,6 +17,18 @@ const TASK_URL = import.meta.env.VITE_TASK_URL
 export default function Settings() {
   const { user, clear } = useAuth()
   const nav = useNavigate()
+  const qc = useQueryClient()
+  const recurring = useQuery({ queryKey: ['plans', 'recurring'], queryFn: () => days.listRecurringPlans() })
+
+  const removeRecurring = async (id: number, title: string) => {
+    if (!confirm(`繰り返し予定「${title}」をすべて削除しますか？（WinTask 側からも消えます）`)) return
+    try {
+      await days.deletePlan(id, 'all')
+      qc.invalidateQueries({ queryKey: ['plans'] })
+    } catch (e) {
+      setMsg(errorMessage(e))
+    }
+  }
   const [msg, setMsg] = useState<string | null>(null)
   const [password, setPassword] = useState('')
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -73,6 +89,30 @@ export default function Settings() {
         <Button variant="secondary" className="mt-2 inline-flex items-center gap-1" onClick={openWinTask} disabled={busy}>
           WinTask を開く <ExternalLink size={14} />
         </Button>
+      </section>
+
+      <section className="mt-3 rounded-lg border border-slate-200 bg-white p-4 text-sm">
+        <div className="flex items-center gap-1 font-medium"><Repeat size={16} aria-hidden /> 繰り返し予定</div>
+        <p className="mt-1 text-xs text-slate-500">「今日」の予定の追加で「繰り返し」を選ぶと登録できます。14 日先まで自動で展開され、WinTask のカレンダーにも出ます。</p>
+        {recurring.data && recurring.data.length === 0 && <p className="mt-2 text-slate-500">まだありません。</p>}
+        {recurring.data && recurring.data.length > 0 && (
+          <ul className="mt-2 divide-y divide-slate-100">
+            {recurring.data.map((m) => (
+              <li key={m.id} className="flex items-center gap-3 py-2">
+                <span className="h-3 w-3 shrink-0 rounded-full" style={{ backgroundColor: m.days_category?.color ?? '#94a3b8' }} aria-hidden />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate font-medium">{m.title}</span>
+                  <span className="block text-xs text-slate-500">
+                    {describeRrule(m.rrule)} ・ {formatClock(m.starts_at)}〜{formatClock(m.ends_at)}
+                    {m.skip_weekends && m.skip_holidays && ' ・ 土日祝スキップ'}
+                    {m.next_occurrence_at && ` ・ 次回 ${new Date(m.next_occurrence_at).getMonth() + 1}/${new Date(m.next_occurrence_at).getDate()}`}
+                  </span>
+                </span>
+                <Button variant="secondary" className="shrink-0 px-2 py-1 text-xs" onClick={() => removeRecurring(m.id, m.title)}>削除</Button>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
 
       {gaEnabled() && (

@@ -110,7 +110,20 @@ export interface Plan {
   days_category?: CategoryLite | null
   clip_start?: string
   clip_end?: string
+  // 繰り返し（WinTask 予定要件定義書 v0.3 §15）
+  rrule: string | null                  // マスター行だけ持つ
+  recurrence_parent_id: number | null   // 展開済みの回はマスターの id
+  original_starts_at: string | null
+  is_exception: boolean
+  is_master: boolean
+  days_auto_track: boolean
+  skip_weekends: boolean
+  skip_holidays: boolean
+  nonworking_action: 'skip' | 'shift' | 'shift_prev'
+  next_occurrence_at?: string | null    // GET /days/plans/recurring のみ
 }
+
+export type PlanScope = 'this' | 'following' | 'all'
 
 export interface PlansResponse {
   date: string

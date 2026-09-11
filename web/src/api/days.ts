@@ -1,5 +1,5 @@
 import { api } from '@/lib/api'
-import type { Category, DayDashboard, Domain, Memo, Plan, PlansResponse, Segment, SegmentsResponse, WeekDashboard } from './types'
+import type { Category, DayDashboard, Domain, Memo, Plan, PlanScope, PlansResponse, Segment, SegmentsResponse, WeekDashboard } from './types'
 
 // ---- カテゴリ ----
 export async function listCategories(archived = false): Promise<Category[]> {
@@ -120,6 +120,11 @@ export interface PlanInput {
   starts_at: string
   ends_at: string
   description?: string | null
+  rrule?: string | null
+  skip_weekends?: boolean
+  skip_holidays?: boolean
+  nonworking_action?: 'skip' | 'shift' | 'shift_prev'
+  days_auto_track?: boolean
 }
 
 export async function listPlans(date: string): Promise<PlansResponse> {
@@ -132,13 +137,25 @@ export async function createPlan(input: PlanInput): Promise<Plan> {
   return data
 }
 
-export async function updatePlan(id: number, input: Partial<PlanInput>): Promise<Plan> {
-  const { data } = await api.patch<Plan>(`/days/plans/${id}`, input)
+/** 展開済みの回を編集するときは scope（this / following / all）で反映範囲を指定する。 */
+export async function updatePlan(id: number, input: Partial<PlanInput>, scope: PlanScope = 'this'): Promise<Plan> {
+  const { data } = await api.patch<Plan>(`/days/plans/${id}`, { ...input, scope })
   return data
 }
 
-export async function deletePlan(id: number): Promise<void> {
-  await api.delete(`/days/plans/${id}`)
+export async function deletePlan(id: number, scope: PlanScope = 'this'): Promise<void> {
+  await api.delete(`/days/plans/${id}`, { params: { scope } })
+}
+
+/** 繰り返し予定（マスター）の一覧。設定画面用。 */
+export async function listRecurringPlans(): Promise<Plan[]> {
+  const { data } = await api.get<Plan[]>('/days/plans/recurring')
+  return data
+}
+
+/** この回を今日はスキップ。 */
+export async function skipPlan(id: number): Promise<void> {
+  await api.post(`/days/plans/${id}/skip`)
 }
 
 /** 予定を実績（タイムログ）にコピー。予定にカテゴリが無ければ category_id が必要。 */

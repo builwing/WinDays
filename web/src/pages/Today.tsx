@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { CalendarPlus, ChevronLeft, ChevronRight, Plus } from 'lucide-react'
 import * as days from '@/api/days'
-import type { Memo, Plan, Segment } from '@/api/types'
+import type { Memo, Plan, PlanScope, Segment } from '@/api/types'
 import { errorMessage } from '@/lib/api'
 import { formatClock, formatDateLabel, formatMinutes, shiftDateKey, toDateKey } from '@/lib/time'
 import QuickStart from '@/components/QuickStart'
@@ -116,9 +116,9 @@ export default function Today() {
     try {
       const input = { title: v.title || null, days_category_id: v.days_category_id, starts_at: v.starts_at, ends_at: v.ends_at, description: v.description || null }
       if (planSheet?.plan) {
-        await days.updatePlan(planSheet.plan.id, input)
+        await days.updatePlan(planSheet.plan.id, input, v.scope)
       } else {
-        await days.createPlan(input)
+        await days.createPlan(v.rrule ? { ...input, rrule: v.rrule, skip_weekends: v.skip_nonworking, skip_holidays: v.skip_nonworking, nonworking_action: 'skip' } : input)
       }
       setPlanSheet(null)
       qc.invalidateQueries({ queryKey: ['plans'] })
@@ -127,11 +127,13 @@ export default function Today() {
     }
   }
 
-  const removePlan = async () => {
+  const removePlan = async (scope: PlanScope) => {
     if (!planSheet?.plan) return
-    if (!confirm('この予定を削除しますか？（WinTask 側からも消えます）')) return
+    const isOcc = planSheet.plan.recurrence_parent_id !== null
+    const msg = isOcc && scope === 'this' ? 'この回をスキップしますか？' : isOcc && scope === 'following' ? 'この回以降の予定をすべて削除しますか？' : isOcc ? 'この繰り返し予定をすべて削除しますか？' : 'この予定を削除しますか？（WinTask 側からも消えます）'
+    if (!confirm(msg)) return
     try {
-      await days.deletePlan(planSheet.plan.id)
+      await days.deletePlan(planSheet.plan.id, scope)
       setPlanSheet(null)
       qc.invalidateQueries({ queryKey: ['plans'] })
     } catch (e) {

@@ -80,6 +80,7 @@ export default function Timeline({ dayKey, segments, running, onSelect, onCreate
             >
               {h >= 18 && (
                 <span className="block truncate leading-[18px]">
+                  {p.recurrence_parent_id !== null && <span className="mr-0.5 opacity-70" aria-label="繰り返し">↻</span>}
                   <span className="font-semibold">{p.title}</span>
                   {h >= 30 && (
                     <span className="ml-1 opacity-80">
