@@ -52,6 +52,30 @@ export interface CategoryMinutes {
   minutes: number
 }
 
+/** 予定どおり率（カテゴリ付き予定が対象。「今」より先は分母に入らない）。 */
+export interface Adherence {
+  plans: number
+  planned_minutes: number
+  matched_minutes: number
+  /** 0〜1。予定が無ければ null */
+  rate: number | null
+  /** 自動記録の結果の内訳（放置で確定／操作あり／スキップ） */
+  runs: { untouched: number; changed: number; skipped: number }
+}
+
+/** カテゴリ別の予実差分（実績 − 予定）。予定があるカテゴリだけ。 */
+export interface Variance {
+  category_id: number
+  name: string
+  color: string
+  domain: Domain
+  planned_minutes: number
+  actual_minutes: number
+  diff_minutes: number
+  /** 予定があった日数（週の 1 日平均用） */
+  plan_days: number
+}
+
 export interface DashboardBase {
   range: 'day' | 'week'
   domains: Record<Domain, number>
@@ -59,6 +83,8 @@ export interface DashboardBase {
   recorded_minutes: number
   work_ratio: number | null
   history_weeks: number
+  adherence: Adherence
+  variance: Variance[]
 }
 
 export interface DayDashboard extends DashboardBase {
@@ -70,6 +96,7 @@ export interface WeekDay {
   date: string
   domains: Record<Domain, number>
   recorded_minutes: number
+  adherence_rate: number | null
 }
 
 export interface WeekDashboard extends DashboardBase {
