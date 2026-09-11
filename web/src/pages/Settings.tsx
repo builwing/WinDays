@@ -67,6 +67,9 @@ export default function Settings() {
       <section className="mt-3 rounded-lg border border-slate-200 bg-white p-4 text-sm">
         <div className="font-medium">WinTask（タスク管理）</div>
         <p className="mt-1 text-slate-600">同じアカウントでそのまま使えます。チームで共有したい記録やタスクは WinTask で。</p>
+        <p className="mt-1 text-slate-600">
+          <strong>予定は WinTask と共通です。</strong>WinTask で入れた個人予定は「今日」のタイムライン左列に表示され、WinDays で立てた予定も WinTask のカレンダーに出ます（チーム予定は WinTask のみ）。
+        </p>
         <Button variant="secondary" className="mt-2 inline-flex items-center gap-1" onClick={openWinTask} disabled={busy}>
           WinTask を開く <ExternalLink size={14} />
         </Button>

@@ -92,3 +92,27 @@ export interface Memo {
   body: string
   segment?: { id: number; category?: CategoryLite } | null
 }
+
+/** 予定（プラン）。実体は WinTask の個人予定（calendar_events）。 */
+export interface Plan {
+  id: number
+  team_id: number | null
+  created_by: number
+  days_category_id: number | null
+  title: string
+  description: string | null
+  location: string | null
+  starts_at: string
+  ends_at: string
+  all_day: boolean
+  source: string
+  is_personal: boolean
+  days_category?: CategoryLite | null
+  clip_start?: string
+  clip_end?: string
+}
+
+export interface PlansResponse {
+  date: string
+  plans: Plan[]
+}

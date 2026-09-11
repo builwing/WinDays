@@ -1,5 +1,5 @@
 import { api } from '@/lib/api'
-import type { Category, DayDashboard, Domain, Memo, Segment, SegmentsResponse, WeekDashboard } from './types'
+import type { Category, DayDashboard, Domain, Memo, Plan, PlansResponse, Segment, SegmentsResponse, WeekDashboard } from './types'
 
 // ---- カテゴリ ----
 export async function listCategories(archived = false): Promise<Category[]> {
@@ -111,4 +111,38 @@ export async function updateMemo(id: number, input: Partial<{ body: string; note
 
 export async function deleteMemo(id: number): Promise<void> {
   await api.delete(`/days/memos/${id}`)
+}
+
+// ---- 予定（プラン）= WinTask の個人予定を共用 ----
+export interface PlanInput {
+  title?: string | null
+  days_category_id?: number | null
+  starts_at: string
+  ends_at: string
+  description?: string | null
+}
+
+export async function listPlans(date: string): Promise<PlansResponse> {
+  const { data } = await api.get<PlansResponse>('/days/plans', { params: { date } })
+  return data
+}
+
+export async function createPlan(input: PlanInput): Promise<Plan> {
+  const { data } = await api.post<Plan>('/days/plans', input)
+  return data
+}
+
+export async function updatePlan(id: number, input: Partial<PlanInput>): Promise<Plan> {
+  const { data } = await api.patch<Plan>(`/days/plans/${id}`, input)
+  return data
+}
+
+export async function deletePlan(id: number): Promise<void> {
+  await api.delete(`/days/plans/${id}`)
+}
+
+/** 予定を実績（タイムログ）にコピー。予定にカテゴリが無ければ category_id が必要。 */
+export async function copyPlanToActual(id: number, input: { category_id?: number | null } = {}): Promise<Segment> {
+  const { data } = await api.post<Segment>(`/days/plans/${id}/copy-to-actual`, input)
+  return data
 }

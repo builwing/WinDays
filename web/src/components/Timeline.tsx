@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import type { Memo, Segment } from '@/api/types'
+import type { Memo, Plan, Segment } from '@/api/types'
 import { DAY_MINUTES, formatClock, minutesIntoDay, snapMinutes, toDateKey } from '@/lib/time'
 
 const PX_PER_MIN = 0.8 // 1 時間 = 48px
@@ -13,13 +13,18 @@ interface Props {
   onCreateAt: (minutes: number) => void
   memos?: Memo[]
   onSelectMemo?: (memo: Memo) => void
+  plans?: Plan[]
+  onSelectPlan?: (plan: Plan) => void
 }
+
+const PLAN_COLOR = '#94a3b8' // カテゴリ未設定の予定
 
 /**
  * 1 日の縦タイムライン。セグメントを帯で表示し、空白タップで新規入力、帯タップで編集。
+ * その日に予定があれば左列に予定、右列に実績を並べて予実対比する。
  * ドラッグ編集は Phase 2。日跨ぎは API の clip_start/clip_end で当日分だけ描く。
  */
-export default function Timeline({ dayKey, segments, running, onSelect, onCreateAt, memos = [], onSelectMemo }: Props) {
+export default function Timeline({ dayKey, segments, running, onSelect, onCreateAt, memos = [], onSelectMemo, plans = [], onSelectPlan }: Props) {
   const ref = useRef<HTMLDivElement>(null)
   const isToday = dayKey === toDateKey(new Date())
 
@@ -42,9 +47,51 @@ export default function Timeline({ dayKey, segments, running, onSelect, onCreate
   const runningStart = running ? minutesIntoDay(running.started_at, dayKey) : null
   const showRunning = running && nowMin !== null && new Date(running.started_at).getTime() < new Date(dayKey + 'T23:59:59').getTime()
 
+  const split = plans.length > 0
+  const actualCol = split ? { left: '40%', right: 0 } : { left: 0, right: 0 }
+
   return (
-    <div ref={ref} className="relative overflow-y-auto" style={{ height: 'calc(100dvh - 260px)' }} aria-label={`${dayKey} のタイムライン`}>
+    <div>
+      {split && (
+        <div className="ml-12 mr-3 flex text-[10px] font-semibold text-slate-400" aria-hidden>
+          <span className="w-[40%] pl-1">予定</span>
+          <span className="pl-1">実績</span>
+        </div>
+      )}
+    <div ref={ref} className="relative overflow-y-auto" style={{ height: split ? 'calc(100dvh - 276px)' : 'calc(100dvh - 260px)' }} aria-label={`${dayKey} のタイムライン`}>
       <div className="relative ml-12 mr-3" style={{ height: HEIGHT }} onClick={handleBackgroundClick} role="presentation">
+        {/* 予定（左列） */}
+        {plans.map((p) => {
+          const start = minutesIntoDay(p.clip_start ?? p.starts_at, dayKey)
+          const end = minutesIntoDay(p.clip_end ?? p.ends_at, dayKey)
+          const h = Math.max(6, (end - start) * PX_PER_MIN - 2)
+          const color = p.days_category?.color ?? PLAN_COLOR
+          return (
+            <button
+              key={`plan-${p.id}`}
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation()
+                onSelectPlan?.(p)
+              }}
+              className="absolute left-0 w-[38%] overflow-hidden rounded-md border-l-4 px-1.5 text-left text-xs"
+              style={{ top: start * PX_PER_MIN + 1, height: h, borderColor: color, backgroundColor: `${color}22`, color: '#334155' }}
+              aria-label={`予定 ${p.title} ${formatClock(p.starts_at)}〜${formatClock(p.ends_at)}`}
+            >
+              {h >= 18 && (
+                <span className="block truncate leading-[18px]">
+                  <span className="font-semibold">{p.title}</span>
+                  {h >= 30 && (
+                    <span className="ml-1 opacity-80">
+                      {formatClock(p.starts_at)}〜{formatClock(p.ends_at)}
+                    </span>
+                  )}
+                </span>
+              )}
+            </button>
+          )
+        })}
+
         {/* 時刻の目盛り */}
         {Array.from({ length: 25 }, (_, h) => (
           <div key={h} className="pointer-events-none absolute inset-x-0 border-t border-slate-200" style={{ top: h * 60 * PX_PER_MIN }}>
@@ -62,8 +109,8 @@ export default function Timeline({ dayKey, segments, running, onSelect, onCreate
               key={s.id}
               type="button"
               onClick={() => onSelect(s)}
-              className="absolute inset-x-0 overflow-hidden rounded-md px-2 text-left text-xs text-white shadow-sm"
-              style={{ top: start * PX_PER_MIN + 1, height: h, backgroundColor: s.category?.color ?? '#94a3b8' }}
+              className="absolute overflow-hidden rounded-md px-2 text-left text-xs text-white shadow-sm"
+              style={{ ...actualCol, top: start * PX_PER_MIN + 1, height: h, backgroundColor: s.category?.color ?? '#94a3b8' }}
               aria-label={`${s.category?.name} ${formatClock(s.started_at)}〜${s.ended_at ? formatClock(s.ended_at) : ''}`}
             >
               {h >= 18 && (
@@ -84,8 +131,9 @@ export default function Timeline({ dayKey, segments, running, onSelect, onCreate
         {/* 進行中（今まで） */}
         {showRunning && runningStart !== null && nowMin !== null && (
           <div
-            className="pointer-events-none absolute inset-x-0 rounded-md border-2 border-dashed px-2 text-xs"
+            className="pointer-events-none absolute rounded-md border-2 border-dashed px-2 text-xs"
             style={{
+              ...actualCol,
               top: runningStart * PX_PER_MIN + 1,
               height: Math.max(6, (nowMin - runningStart) * PX_PER_MIN - 2),
               borderColor: running.category?.color,
@@ -127,6 +175,7 @@ export default function Timeline({ dayKey, segments, running, onSelect, onCreate
           </div>
         )}
       </div>
+    </div>
     </div>
   )
 }

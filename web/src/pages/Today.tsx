@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { ChevronLeft, ChevronRight, Plus } from 'lucide-react'
+import { CalendarPlus, ChevronLeft, ChevronRight, Plus } from 'lucide-react'
 import * as days from '@/api/days'
-import type { Memo, Segment } from '@/api/types'
+import type { Memo, Plan, Segment } from '@/api/types'
 import { errorMessage } from '@/lib/api'
 import { formatClock, formatDateLabel, formatMinutes, shiftDateKey, toDateKey } from '@/lib/time'
 import QuickStart from '@/components/QuickStart'
 import Timeline from '@/components/Timeline'
 import SegmentSheet, { type SheetValue } from '@/components/SegmentSheet'
+import PlanSheet, { type PlanSheetValue } from '@/components/PlanSheet'
 import { DomainDonut } from '@/components/charts'
 import { useMemoSheet } from '@/stores/memoSheet'
 import { PenLine } from 'lucide-react'
@@ -19,6 +20,7 @@ export default function Today() {
   const qc = useQueryClient()
   const [dayKey, setDayKey] = useState(toDateKey(new Date()))
   const [sheet, setSheet] = useState<{ segment: Segment | null; minutes?: number } | null>(null)
+  const [planSheet, setPlanSheet] = useState<{ plan: Plan | null; minutes?: number } | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
@@ -26,6 +28,7 @@ export default function Today() {
   const segments = useQuery({ queryKey: ['segments', dayKey], queryFn: () => days.listSegments(dayKey) })
   const dashboard = useQuery({ queryKey: ['dashboard', 'day', dayKey], queryFn: () => days.getDayDashboard(dayKey), retry: false })
   const memos = useQuery({ queryKey: ['memos', dayKey], queryFn: () => days.listMemos(dayKey) })
+  const plans = useQuery({ queryKey: ['plans', dayKey], queryFn: () => days.listPlans(dayKey) })
   const openMemoEdit = useMemoSheet((s) => s.openEdit)
 
   const invalidate = useCallback(() => {
@@ -107,6 +110,49 @@ export default function Today() {
     }
   }
 
+  // ---- 予定（WinTask の個人予定と共通）----
+  const savePlan = async (v: PlanSheetValue) => {
+    setError(null)
+    try {
+      const input = { title: v.title || null, days_category_id: v.days_category_id, starts_at: v.starts_at, ends_at: v.ends_at, description: v.description || null }
+      if (planSheet?.plan) {
+        await days.updatePlan(planSheet.plan.id, input)
+      } else {
+        await days.createPlan(input)
+      }
+      setPlanSheet(null)
+      qc.invalidateQueries({ queryKey: ['plans'] })
+    } catch (e) {
+      setError(errorMessage(e))
+    }
+  }
+
+  const removePlan = async () => {
+    if (!planSheet?.plan) return
+    if (!confirm('この予定を削除しますか？（WinTask 側からも消えます）')) return
+    try {
+      await days.deletePlan(planSheet.plan.id)
+      setPlanSheet(null)
+      qc.invalidateQueries({ queryKey: ['plans'] })
+    } catch (e) {
+      setError(errorMessage(e))
+    }
+  }
+
+  const copyPlan = async (categoryId: number | null) => {
+    if (!planSheet?.plan) return
+    setError(null)
+    try {
+      await days.copyPlanToActual(planSheet.plan.id, { category_id: categoryId })
+      trackFirst()
+      setPlanSheet(null)
+      invalidate()
+      qc.invalidateQueries({ queryKey: ['plans'] })
+    } catch (e) {
+      setError(errorMessage(e))
+    }
+  }
+
   const activeCategories = useMemo(() => (categories.data ?? []).filter((c) => !c.archived_at), [categories.data])
   const isToday = dayKey === toDateKey(new Date())
 
@@ -127,7 +173,7 @@ export default function Today() {
         </button>
       </header>
 
-      {error && !sheet && (
+      {error && !sheet && !planSheet && (
         <p className="mx-4 mb-2 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">
           {error}
         </p>
@@ -173,6 +219,11 @@ export default function Today() {
           running={segments.data.running}
           memos={memos.data ?? []}
           onSelectMemo={openMemoEdit}
+          plans={plans.data?.plans ?? []}
+          onSelectPlan={(p) => {
+            setError(null)
+            setPlanSheet({ plan: p })
+          }}
           onSelect={(s) => {
             setError(null)
             setSheet({ segment: s })
@@ -186,12 +237,37 @@ export default function Today() {
 
       <button
         type="button"
+        onClick={() => {
+          setError(null)
+          setPlanSheet({ plan: null, minutes: 9 * 60 })
+        }}
+        className="fixed bottom-[9.5rem] right-5 z-10 flex h-11 w-11 items-center justify-center rounded-full border border-slate-300 bg-white text-slate-600 shadow-md"
+        aria-label="予定を追加"
+      >
+        <CalendarPlus size={20} />
+      </button>
+      <button
+        type="button"
         onClick={() => setSheet({ segment: null, minutes: 9 * 60 })}
         className="fixed bottom-20 right-4 z-10 flex h-14 w-14 items-center justify-center rounded-full bg-work text-white shadow-lg"
         aria-label="記録を追加"
       >
         <Plus size={26} />
       </button>
+
+      {planSheet && (
+        <PlanSheet
+          dayKey={dayKey}
+          categories={activeCategories}
+          plan={planSheet.plan}
+          initialMinutes={planSheet.minutes}
+          onSave={savePlan}
+          onDelete={planSheet.plan ? removePlan : undefined}
+          onCopy={planSheet.plan ? copyPlan : undefined}
+          onClose={() => setPlanSheet(null)}
+          error={error}
+        />
+      )}
 
       {sheet && (
         <SegmentSheet
