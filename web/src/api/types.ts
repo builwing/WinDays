@@ -187,6 +187,8 @@ export interface AutoTrackSettings {
   auto_track: boolean
   grace_minutes: number
   paused_today: boolean
+  /** 止め忘れ通知の閾値（時間）。0 = OFF */
+  overrun_hours: number
 }
 
 export interface PlanRunsResponse {

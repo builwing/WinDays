@@ -43,8 +43,8 @@ export async function startSegment(category_id: number): Promise<Segment> {
   return data
 }
 
-export async function stopSegment(id: number): Promise<Segment> {
-  const { data } = await api.post<Segment>(`/days/segments/${id}/stop`)
+export async function stopSegment(id: number, params: { notification_id?: number } = {}): Promise<Segment> {
+  const { data } = await api.post<Segment>(`/days/segments/${id}/stop`, params)
   return data
 }
 

@@ -124,6 +124,15 @@ export default function Settings() {
               <span>今日は自動記録しない<span className="block text-xs text-slate-500">休みの日などに。明日には自動で戻ります。</span></span>
               <input type="checkbox" className="h-5 w-5" checked={autoTrack.data.paused_today} onChange={(e) => saveAutoTrack({ paused_today: e.target.checked })} />
             </label>
+            <label className="flex items-center justify-between gap-3">
+              <span>止め忘れ通知<span className="block text-xs text-slate-500">ワンタップ計測や「続ける」後の記録がこの時間を超えたら「終了／続ける」を通知します（通知が無ければメール）。再通知は間隔を倍にして最大 3 回。</span></span>
+              <select value={autoTrack.data.overrun_hours} onChange={(e) => saveAutoTrack({ overrun_hours: Number(e.target.value) })} className="rounded-md border border-slate-300 px-2 py-1">
+                <option value={0}>OFF</option>
+                {[1, 2, 3, 4, 6, 8, 12].map((h) => (
+                  <option key={h} value={h}>{h} 時間</option>
+                ))}
+              </select>
+            </label>
           </div>
         )}
       </section>

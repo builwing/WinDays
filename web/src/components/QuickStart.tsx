@@ -9,10 +9,12 @@ interface Props {
   onStart: (categoryId: number) => void
   onStop: () => void
   busy?: boolean
+  /** 止め忘れ通知の閾値（時間）。0 なら表示しない */
+  overrunHours?: number
 }
 
 /** ワンタップ計測バー。進行中があれば経過時間と終了ボタン、カテゴリのチップで切替。 */
-export default function QuickStart({ categories, running, onStart, onStop, busy }: Props) {
+export default function QuickStart({ categories, running, onStart, onStop, busy, overrunHours = 0 }: Props) {
   const [now, setNow] = useState(Date.now())
   useEffect(() => {
     if (!running) return
@@ -21,6 +23,8 @@ export default function QuickStart({ categories, running, onStart, onStop, busy 
   }, [running])
 
   const elapsed = running ? (now - new Date(running.started_at).getTime()) / 60000 : 0
+  // 予定内の自動記録（plan_id あり）は予定の終了で確認が出るので、ここで超過を出すのはワンタップ計測だけ
+  const overrun = running && !running.plan_id && overrunHours > 0 && elapsed >= overrunHours * 60
 
   return (
     <section className="sticky top-0 z-10 border-b border-slate-200 bg-white/95 px-4 py-3 backdrop-blur" aria-label="今の記録">
@@ -31,6 +35,7 @@ export default function QuickStart({ categories, running, onStart, onStop, busy 
             <div className="text-lg font-bold leading-tight">
               {running.category?.name} <span className="text-sm font-normal">{formatMinutes(Math.max(0, elapsed))}</span>
             </div>
+            {overrun && <div className="mt-0.5 text-xs font-medium">{overrunHours} 時間を超えています。終わっていれば終了を（時刻はあとから直せます）</div>}
           </div>
           <button
             type="button"

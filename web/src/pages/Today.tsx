@@ -40,6 +40,7 @@ export default function Today() {
   const isTodayKey = dayKey === toDateKey(new Date())
   // 自動記録の状態。今日は 30 秒ごとに更新（サーバーの毎分処理を拾う）
   const runs = useQuery({ queryKey: ['plan-runs', dayKey], queryFn: () => days.listPlanRuns(dayKey), refetchInterval: isTodayKey ? 30_000 : false })
+  const autoTrack = useQuery({ queryKey: ['auto-track-settings'], queryFn: () => days.getAutoTrackSettings(), staleTime: 5 * 60_000 })
   const openMemoEdit = useMemoSheet((s) => s.openEdit)
   const [params, setParams] = useSearchParams()
   const handledParam = useRef<string | null>(null)
@@ -94,6 +95,22 @@ export default function Today() {
     handledParam.current = key
     days
       .actPlanRun(Number(runId), act === 'change' ? 'ok' : act, act === 'extend' ? { minutes: 30 } : {})
+      .then(() => invalidate())
+      .catch((e) => setError(errorMessage(e)))
+      .finally(() => setParams({}, { replace: true }))
+  }, [params, setParams, invalidate])
+
+  // 止め忘れ通知の「終了」（通知のボタンやメールのリンク）から /app?seg=<id>&act=stop&n=<通知id> で開かれたとき、その記録を終了する
+  useEffect(() => {
+    const segId = params.get('seg')
+    const act = params.get('act')
+    if (!segId || act !== 'stop') return
+    const key = `seg:${segId}`
+    if (handledParam.current === key) return
+    handledParam.current = key
+    const n = params.get('n')
+    days
+      .stopSegment(Number(segId), n ? { notification_id: Number(n) } : {})
       .then(() => invalidate())
       .catch((e) => setError(errorMessage(e)))
       .finally(() => setParams({}, { replace: true }))
@@ -229,7 +246,7 @@ export default function Today() {
 
   return (
     <div>
-      <QuickStart categories={activeCategories} running={segments.data?.running ?? null} onStart={start} onStop={stop} busy={busy} />
+      <QuickStart categories={activeCategories} running={segments.data?.running ?? null} onStart={start} onStop={stop} busy={busy} overrunHours={autoTrack.data?.overrun_hours ?? 0} />
 
       <header className="flex items-center justify-between px-4 py-2">
         <button type="button" onClick={() => setDayKey(shiftDateKey(dayKey, -1))} className="rounded-md p-2 text-slate-500" aria-label="前日">
