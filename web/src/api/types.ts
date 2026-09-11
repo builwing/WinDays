@@ -28,7 +28,9 @@ export interface Segment {
   started_at: string
   ended_at: string | null
   note: string | null
-  source: 'tap' | 'manual' | 'plan_copy'
+  source: 'tap' | 'manual' | 'plan_copy' | 'auto'
+  plan_id?: number | null
+  edited_at?: string | null
   client_uid: string | null
   category?: CategoryLite
   clip_start?: string
@@ -128,4 +130,51 @@ export type PlanScope = 'this' | 'following' | 'all'
 export interface PlansResponse {
   date: string
   plans: Plan[]
+}
+
+// ---- 自動記録（オートトラック）----
+export type PlanRunState = 'pending' | 'starting' | 'started' | 'ending' | 'extended' | 'ended' | 'skipped' | 'changed'
+export type PlanRunAction = 'ok' | 'change' | 'shift' | 'skip' | 'resume_previous' | 'continue' | 'extend' | 'stop_now'
+
+export interface PlanRun {
+  id: number
+  calendar_event_id: number
+  user_id: number
+  segment_id: number | null
+  previous_segment_id: number | null
+  state: PlanRunState
+  grace_until: string | null
+  extended_until: string | null
+  start_notified_at: string | null
+  end_notified_at: string | null
+  acknowledged_at: string | null
+  resolved_at: string | null
+  resolved_by: 'auto' | 'user' | null
+  plan?: { id: number; title: string; starts_at: string; ends_at: string; days_category_id: number | null; days_category?: CategoryLite | null }
+  segment?: Pick<Segment, 'id' | 'category_id' | 'started_at' | 'ended_at' | 'source'> | null
+  previous_segment?: Pick<Segment, 'id' | 'category_id' | 'started_at' | 'ended_at'> | null
+}
+
+export interface AutoTrackSettings {
+  auto_track: boolean
+  grace_minutes: number
+  paused_today: boolean
+}
+
+export interface PlanRunsResponse {
+  date: string
+  runs: PlanRun[]
+  cards: PlanRun[]
+  settings: AutoTrackSettings
+}
+
+export interface DaysNotification {
+  id: number
+  kind: 'start' | 'end' | 'switch' | 'overrun' | 'morning' | 'reminder'
+  title: string
+  body: string | null
+  sent_at: string
+  read_at: string | null
+  acted_at: string | null
+  action: string | null
 }

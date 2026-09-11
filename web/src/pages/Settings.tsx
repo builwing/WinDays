@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { ExternalLink, Repeat } from 'lucide-react'
+import { ExternalLink, Repeat, Zap } from 'lucide-react'
 import * as auth from '@/api/auth'
 import * as days from '@/api/days'
 import { describeRrule } from '@/lib/rrule'
@@ -19,6 +19,17 @@ export default function Settings() {
   const nav = useNavigate()
   const qc = useQueryClient()
   const recurring = useQuery({ queryKey: ['plans', 'recurring'], queryFn: () => days.listRecurringPlans() })
+  const autoTrack = useQuery({ queryKey: ['auto-track-settings'], queryFn: () => days.getAutoTrackSettings() })
+
+  const saveAutoTrack = async (input: Parameters<typeof days.updateAutoTrackSettings>[0]) => {
+    try {
+      const next = await days.updateAutoTrackSettings(input)
+      qc.setQueryData(['auto-track-settings'], next)
+      qc.invalidateQueries({ queryKey: ['plan-runs'] })
+    } catch (e) {
+      setMsg(errorMessage(e))
+    }
+  }
 
   const removeRecurring = async (id: number, title: string) => {
     if (!confirm(`繰り返し予定「${title}」をすべて削除しますか？（WinTask 側からも消えます）`)) return
@@ -89,6 +100,31 @@ export default function Settings() {
         <Button variant="secondary" className="mt-2 inline-flex items-center gap-1" onClick={openWinTask} disabled={busy}>
           WinTask を開く <ExternalLink size={14} />
         </Button>
+      </section>
+
+      <section className="mt-3 rounded-lg border border-slate-200 bg-white p-4 text-sm">
+        <div className="flex items-center gap-1 font-medium"><Zap size={16} aria-hidden /> 自動記録</div>
+        <p className="mt-1 text-xs text-slate-500">カテゴリ付きの予定は、開始時刻に確認が出て、猶予の間に変更が無ければ予定どおり記録されます。終了も同じです。アプリを閉じていても記録されます。</p>
+        {autoTrack.data && (
+          <div className="mt-2 space-y-2">
+            <label className="flex items-center justify-between gap-3">
+              <span>自動記録を使う</span>
+              <input type="checkbox" className="h-5 w-5" checked={autoTrack.data.auto_track} onChange={(e) => saveAutoTrack({ auto_track: e.target.checked })} />
+            </label>
+            <label className="flex items-center justify-between gap-3">
+              <span>確認の猶予</span>
+              <select value={autoTrack.data.grace_minutes} onChange={(e) => saveAutoTrack({ grace_minutes: Number(e.target.value) })} className="rounded-md border border-slate-300 px-2 py-1">
+                {[0, 1, 3, 5, 10, 15].map((m) => (
+                  <option key={m} value={m}>{m === 0 ? 'なし（即確定）' : `${m} 分`}</option>
+                ))}
+              </select>
+            </label>
+            <label className="flex items-center justify-between gap-3">
+              <span>今日は自動記録しない<span className="block text-xs text-slate-500">休みの日などに。明日には自動で戻ります。</span></span>
+              <input type="checkbox" className="h-5 w-5" checked={autoTrack.data.paused_today} onChange={(e) => saveAutoTrack({ paused_today: e.target.checked })} />
+            </label>
+          </div>
+        )}
       </section>
 
       <section className="mt-3 rounded-lg border border-slate-200 bg-white p-4 text-sm">

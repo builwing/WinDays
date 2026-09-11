@@ -2,13 +2,15 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { CalendarPlus, ChevronLeft, ChevronRight, Plus } from 'lucide-react'
 import * as days from '@/api/days'
-import type { Memo, Plan, PlanScope, Segment } from '@/api/types'
+import type { Memo, Plan, PlanRun, PlanRunAction, PlanScope, Segment } from '@/api/types'
 import { errorMessage } from '@/lib/api'
 import { formatClock, formatDateLabel, formatMinutes, shiftDateKey, toDateKey } from '@/lib/time'
 import QuickStart from '@/components/QuickStart'
 import Timeline from '@/components/Timeline'
 import SegmentSheet, { type SheetValue } from '@/components/SegmentSheet'
 import PlanSheet, { type PlanSheetValue } from '@/components/PlanSheet'
+import ConfirmCards from '@/components/ConfirmCards'
+import TodayPlans from '@/components/TodayPlans'
 import { DomainDonut } from '@/components/charts'
 import { useMemoSheet } from '@/stores/memoSheet'
 import { PenLine } from 'lucide-react'
@@ -29,12 +31,17 @@ export default function Today() {
   const dashboard = useQuery({ queryKey: ['dashboard', 'day', dayKey], queryFn: () => days.getDayDashboard(dayKey), retry: false })
   const memos = useQuery({ queryKey: ['memos', dayKey], queryFn: () => days.listMemos(dayKey) })
   const plans = useQuery({ queryKey: ['plans', dayKey], queryFn: () => days.listPlans(dayKey) })
+  const isTodayKey = dayKey === toDateKey(new Date())
+  // 自動記録の状態。今日は 30 秒ごとに更新（サーバーの毎分処理を拾う）
+  const runs = useQuery({ queryKey: ['plan-runs', dayKey], queryFn: () => days.listPlanRuns(dayKey), refetchInterval: isTodayKey ? 30_000 : false })
   const openMemoEdit = useMemoSheet((s) => s.openEdit)
 
   const invalidate = useCallback(() => {
     qc.invalidateQueries({ queryKey: ['segments'] })
     qc.invalidateQueries({ queryKey: ['dashboard'] })
+    qc.invalidateQueries({ queryKey: ['plan-runs'] })
   }, [qc])
+
 
   // 進行中の経過時間を反映するため 1 分ごとに内訳を更新
   useEffect(() => {
@@ -51,6 +58,20 @@ export default function Today() {
       }
     } catch {
       /* ignore */
+    }
+  }
+
+  const actRun = async (run: PlanRun, action: PlanRunAction, params?: { category_id?: number; started_at?: string; minutes?: number }) => {
+    setBusy(true)
+    setError(null)
+    try {
+      await days.actPlanRun(run.id, action, params)
+      trackFirst()
+      invalidate()
+    } catch (e) {
+      setError(errorMessage(e))
+    } finally {
+      setBusy(false)
     }
   }
 
@@ -122,6 +143,7 @@ export default function Today() {
       }
       setPlanSheet(null)
       qc.invalidateQueries({ queryKey: ['plans'] })
+      qc.invalidateQueries({ queryKey: ['plan-runs'] })
     } catch (e) {
       setError(errorMessage(e))
     }
@@ -179,6 +201,22 @@ export default function Today() {
         <p className="mx-4 mb-2 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">
           {error}
         </p>
+      )}
+
+      {isTodayKey && runs.data && runs.data.cards.length > 0 && (
+        <ConfirmCards cards={runs.data.cards} categories={activeCategories} onAct={actRun} busy={busy} />
+      )}
+
+      {plans.data && runs.data && (
+        <TodayPlans
+          plans={plans.data.plans}
+          runs={runs.data.runs}
+          autoTrack={runs.data.settings.auto_track && !runs.data.settings.paused_today}
+          onSelect={(p) => {
+            setError(null)
+            setPlanSheet({ plan: p })
+          }}
+        />
       )}
 
       {dashboard.data && dashboard.data.recorded_minutes > 0 && (

@@ -1,5 +1,5 @@
 import { api } from '@/lib/api'
-import type { Category, DayDashboard, Domain, Memo, Plan, PlanScope, PlansResponse, Segment, SegmentsResponse, WeekDashboard } from './types'
+import type { AutoTrackSettings, Category, DayDashboard, DaysNotification, Domain, Memo, Plan, PlanRun, PlanRunAction, PlanRunsResponse, PlanScope, PlansResponse, Segment, SegmentsResponse, WeekDashboard } from './types'
 
 // ---- カテゴリ ----
 export async function listCategories(archived = false): Promise<Category[]> {
@@ -161,5 +161,31 @@ export async function skipPlan(id: number): Promise<void> {
 /** 予定を実績（タイムログ）にコピー。予定にカテゴリが無ければ category_id が必要。 */
 export async function copyPlanToActual(id: number, input: { category_id?: number | null } = {}): Promise<Segment> {
   const { data } = await api.post<Segment>(`/days/plans/${id}/copy-to-actual`, input)
+  return data
+}
+
+// ---- 自動記録（オートトラック）----
+export async function listPlanRuns(date: string): Promise<PlanRunsResponse> {
+  const { data } = await api.get<PlanRunsResponse>('/days/plan-runs', { params: { date } })
+  return data
+}
+
+export async function actPlanRun(id: number, action: PlanRunAction, params: { category_id?: number; started_at?: string; minutes?: number } = {}): Promise<PlanRun> {
+  const { data } = await api.post<PlanRun>(`/days/plan-runs/${id}/act`, { action, ...params })
+  return data
+}
+
+export async function getAutoTrackSettings(): Promise<AutoTrackSettings> {
+  const { data } = await api.get<AutoTrackSettings>('/days/settings/auto-track')
+  return data
+}
+
+export async function updateAutoTrackSettings(input: Partial<AutoTrackSettings>): Promise<AutoTrackSettings> {
+  const { data } = await api.put<AutoTrackSettings>('/days/settings/auto-track', input)
+  return data
+}
+
+export async function listNotifications(): Promise<DaysNotification[]> {
+  const { data } = await api.get<DaysNotification[]>('/days/notifications')
   return data
 }

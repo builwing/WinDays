@@ -70,6 +70,9 @@ export default function SegmentSheet({ dayKey, categories, segment, initialMinut
         aria-label={segment ? '記録を編集' : '記録を追加'}
       >
         <h2 className="text-base font-semibold">{segment ? '記録を編集' : '記録を追加'}</h2>
+        {segment?.source === 'auto' && (
+          <p className="mt-0.5 text-xs text-slate-500">予定から自動記録されたものです。直すと「手で修正」として残ります。</p>
+        )}
 
         <div className="mt-3 flex flex-wrap gap-2" role="radiogroup" aria-label="カテゴリ">
           {categories.map((c) => {
